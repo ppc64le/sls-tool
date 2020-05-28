@@ -21,7 +21,6 @@ export TST_USE_SSH=ssh
 export LTP_TIMEOUT_MUL=40
 export TST_DISABLE_APPARMOR=1
 export LTP_RSH=ssh
-export PASSWD=don2rry
 export LTPROOT=/opt/ltp
 export PS1='\[\e[31m\]\u@\h:\w\[\e[0m\] '
 
@@ -35,4 +34,3 @@ export PS1='\[\e[31m\]\u@\h:\w\[\e[0m\] '
 #Export appropriate PATH
 #*************************************************
 export PATH=$PATH:/opt/ltp:/opt/ltp/testcases/bin:/opt/ltp/testscripts
-

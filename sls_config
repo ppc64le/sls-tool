@@ -17,4 +17,4 @@ SLS_DIR='/var/log/sls'
 LHOST=''
 RHOST=''
 PACKAGE_LIST=''
-PATH=$PATH:/opt/ltp:/opt/ltp/testcases/bin:/opt/ltp/testscripts
+PATH='/opt/ltp:/opt/ltp/testcases/bin:/opt/ltp/testscripts'
