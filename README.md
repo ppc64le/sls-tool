@@ -34,7 +34,7 @@ setup_sls.py
 
 Starting SLS:
 -------------------------------------------------------------------------------
-Review and edit [sls_config](https://github.ibm.com/ISST-LTE/SLS_PYTHON/blob/master/sls_config) file. Refer [README](https://github.com/ppc64le/sls-tool/blob/master/README_SLS_CONFIG)
+Review and edit [sls_config](https://github.com/ppc64le/sls-tool/blob/master/sls_config) file. Refer [README](https://github.com/ppc64le/sls-tool/blob/master/README_SLS_CONFIG)
 
 Review start.sls.py usage and start accordingly
 ```
