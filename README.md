@@ -8,7 +8,7 @@ The initial Open Source release of SLS caters to all manners of Power platforms 
 
 Test Grouping
 -------------------------------------------------------------------------------
-LTP contains large number of testcases. It is important to organise the tests into smaller sub groups, to have a flexible run during stress test. The group of tests can be found under [tc_group](https://github.ibm.com/ISST-LTE/SLS_PYTHON/blob/master/omitlist)
+LTP contains large number of testcases. It is important to organise the tests into smaller sub groups, to have a flexible run during stress test. The group of tests can be found under [tc_group](https://github.com/ppc64le/sls-tool/blob/master/tc_group)
 - **BASE**  General Kernel Stress|Memory Management|Process Management|Security|Threads|IPC
 - **IO** General IO Test|File System|File Stress|LVM
 - **NFS** General NFS Stress|NFS procotol & version|Network File stress/Lock tests|RPC
@@ -34,7 +34,7 @@ setup_sls.py
 
 Starting SLS:
 -------------------------------------------------------------------------------
-Review and edit [sls_config](https://github.ibm.com/ISST-LTE/SLS_PYTHON/blob/master/sls_config) file. Refer [README](https://github.ibm.com/ISST-LTE/SLS_PYTHON/blob/master/README_SLS_CONFIG)
+Review and edit [sls_config](https://github.ibm.com/ISST-LTE/SLS_PYTHON/blob/master/sls_config) file. Refer [README](https://github.com/ppc64le/sls-tool/blob/master/README_SLS_CONFIG)
 
 Review start.sls.py usage and start accordingly
 ```
@@ -74,7 +74,7 @@ The hierarchical logs are created under the path specified by TC_HTML_PATH
 ```
 Default Path --> /LOGS/SLS/Distro Name/Distro Level/Machine_Name/Date & Time Stamp/
 ```
-Refer to [README_MONITOR](https://github.ibm.com/ISST-LTE/SLS_PYTHON/blob/master/README_MONITORING) to know about the logs created during execution
+Refer to [README](https://github.com/ppc64le/sls-tool/blob/master/README_MONITORING) to know about the logs created during execution
 
 Authors
 -------------------------------------------------------------------------------
