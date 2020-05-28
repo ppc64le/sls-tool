@@ -1,0 +1,97 @@
+
+		=================================================
+		DESCRIPTION OF SLS VARIABLES in 'sls_config' FILE
+		=================================================
+
++-----------------------+
+|   Test Parameters     |
++-----------------------+-----------------------------------------------------------------------+
+|     TEST_HOURS        | Decides for how many hours the SLS tests should run.                  |
+|                       | Allowed values : Positive integer.                                    |
+|                       | Default value  : 72                                                   |
++-----------------------+-----------------------------------------------------------------------+
+|   WAIT_SCENARIO       | Decides to wait for current test scenario to complete(YES) or not(NO) |
+|                       | Allowed values : YES or NO                                            |
+|                       | Default value  : If only Network and/or NFS tests then its always YES |
+|                       |                : If Base & IO then: NO                                |
++-----------------------+-----------------------------------------------------------------------+
+| MIN_TEST_PER_SCENARIO | Minimum number of tests to pick per test scenario                     |
+|                       | Allowed values : Positive integer.                                    |
+|                       | Default value  : 1                                                    |
++-----------------------+-----------------------------------------------------------------------+
+| MAX_TEST_PER_SCENARIO | Maximum number of tests to pick per test scenario                     |
+|                       | Allowed values : Positive integer.                                    |
+|                       | Default value  : 5                                                    |
++-----------------------+-----------------------------------------------------------------------+
+|     ITERATIONS        | Number of iterations each test should run per scenario                |
+|                       | Allowed values : Positive integer                                     |
+|                       | Default value  : 1 to 127 for Base,IO and NFS tests                   |
+|                       |                : 1 to 10 for Network tests (CAPED)                    |
++-----------------------+-----------------------------------------------------------------------+
+|     MUST_TEST         | Tests to pick for every scenario.                                     |
+|                       | Note: If these tests are already running they wont be picked          |
+|                       | Allowed values : List of tests comma separated                        |
+|                       | Default value  : None                                                 |
++-----------------------+-----------------------------------------------------------------------+
+|    EXCLUDE_TEST       | List of tests which needs to be excluded from running                 |
+|                       | Allowed values : List of tests comma separated                        |
+|                       | Default value  : None                                                 |
++-----------------------+-----------------------------------------------------------------------+
+|      IO_DISKS         | List of Free disks which can be used for SLS IO testing. SLS executes |
+|                       | IO tests on these disks instead of /tmp                               |
+|                       | Allowed values : List of disks comma separated                        |
+|                       | Default value  : None                                                 |
+|                       | Example1: IO_DISKS='mpatha,mpathb'                                    |
+|                       | Example2: IO_DISKS='sdb,sdc'                                          |
++-----------------------+-----------------------------------------------------------------------+
+|       IO_FS           | Filesystem to create on IO test disks mention as IO_DISKS.            |
+|                       | Allowed values : Supported filesystems on the OS                      |
+|                       | Default value  : one/some among xfs btrfs ext2 ext3 ext4              |
+|                       | Example1: IO_FS='xfs,ext4'                                            |
+|                       | Example2: IO_FS='lvm,btrfs' : Creates VG and LV on IO_DISK and creates|
+|                       |                               btrfs Filesystem on the LV              |
++-----------------------+-----------------------------------------------------------------------+
+| MACHINE_INFO_COMMANDS | Set of commands to capture VM information before starting tests       |
+|                       | Allowed values : Supported OS commands like uname -a,lsblk            |
+|                       | Default value  : None                                                 |
+|                       | MACHINE_INFO_COMMANDS='lsblk, df -h, cat /proc/cmdline'               |
++-----------------------+-----------------------------------------------------------------------+
+
+
++-----------------------+
+|  Machine Parameters   |
++-----------------------+-----------------------------------------------------------------------+
+|     TC_HTML_PATH      | Log directory where SLS tool output and SLS html files to dump        |
+|                       | Allowed values : Absolute directory name                              |
+|                       | Default value  : /LOGS/SLS                                            |
++-----------------------+-----------------------------------------------------------------------+
+|       SLS_DIR         | Log directory where SLS script output will be dumped                  |
+|                       | Allowed values : Absolute directory name                              |
+|                       | Default value  : /var/log/sls                                         |
++-----------------------+-----------------------------------------------------------------------+
+|     HTTP_SERVER       | HTTP server IP on which the LOGS can be viewed. For better log        |
+|                       | maintenance, have a HTTP server configured and a NFS export directory |
+|                       | which can be mounted on Test VM and pointed as TC_HTML_PATH           |
+|                       | Allowed values : HTTP Server IP (Not mandatory)                       |
+|                       | Default value  : None                                                 |
++-----------------------+-----------------------------------------------------------------------+
+|        LHOST          | Host name of VM where SLS is being executed. mandorty input for       |
+|                       | Network tests                                                         |
+|                       | Allowed values : Hostname of VM                                       |
+|                       | Default value  : No default value, it should be mandatorily filled if |
+|                       |                  Network tests are intended to run via SLS            |
++-----------------------+-----------------------------------------------------------------------+
+|        RHOST          | Host name of VM which acts as Network/NFS server                      |
+|                       | Allowed values : Hostname of VM                                       |
+|                       | Default value  : No default value, it should be mandatorily filled if |
+|                       |                  Network tests are intended to run via SLS            |
++-----------------------+-----------------------------------------------------------------------+
+|     PACKAGE_LIST      | List of pacakges to be installed apart from SLS installs by default   |
+|                       | Allowed values : Package names comma separated                        |
+|                       | Default value  : None                                                 |
++-----------------------+-----------------------------------------------------------------------+
+|      PATH             | PATH variables to export.Please capture original PATH value from shell|
+|                       | and paste it in PATH variable under sls_config file                   |
+|                       | Allowed values : echo $PATH and extra directories/binary paths to     |
+|                       | export to SLS tool                                                    |
++-----------------------+-----------------------------------------------------------------------+

@@ -1,0 +1,48 @@
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+#           fork12 hangs the systems by creating unlimited forks
+#           hackbench consumes 90% CPU. Carefull !
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# Focus area wise testcase grouping
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+NW1_LIST="net.features net.tcp_cmds net.sctp net_stress.appl net_stress.broken_ip"
+
+NW2_LIST="net_stress.multicast net_stress.interface net_stress.route net_stress.ipsec_tcp"
+
+NFS_LIST="net.nfs"
+
+IO_LIST="dio dma_thread_diotest fcntl-locktests filecaps fs fs_bind fs_ext4 fs_perms_simple fs_readonly fsx input io io_cd io_floppy  kernel_misc ltp-aiodio.part1 ltp-aiodio.part2 ltp-aiodio.part3 ltp-aiodio.part4 ltp-aio-stress.part1 ltp-aio-stress.part2 lvm.part1 lvm.part2 pty scsi_debug.part1"
+
+BASE_LIST="commands connectors containers controllers crashme crypto cve hugetlb ima ipc math nptl numa quickhit sched securebits smack syscalls syscalls-ipc timers tpm_tools tracing"
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+#UNSUPPORTED_TEST_CASES on PPC
+UNSUPPORT_ARCH="*_16|cacheflush01|cpufreq_boost|cve-2015-3290|cve-2017-17053|f00f|tpm|smt_smp|smack|"
+
+TC_FAIL_LIST="rlogin|aiocp|cgroup_xattr|busy_poll|macsec"
+
+#[RIT] Resource Intensive Tests. Run only few iterations & not parallely
+RIT="stress|aio|mem|fork|mmap|cpu|oom|cgroup"
+
+#Memory exploit tests
+MEM_OMIT_LIST="sync01|sync03|msync04|mkdir02|sysctl01|memcg_control_test.sh|netns_breakns.sh|mkfs01.sh|memcg_limit_in_bytes.sh|mesgq_nstest|mkswap01.sh|mmapstress03|memcg_max_usage_in_bytes_test.sh|mmap2|madvise07|insmod01.sh|inotify09|max_map_count|futex_wait05|icmp-uni-vti.sh|ftrace_stress_test.sh|idle_cpu_mem|gettimeofday02|gre01.sh|fs_di|ksm05|fs_fill|ftest07|fs_racer.sh|hackbench|oom05|ln_tests.sh|fork13|ftp-upload-stress|rcp01|sendfile09|min_free_kbytes|oom01|cpuset_memory_pressure|msgstress04|msgstress01|msgstress02|msgstress03|"
+
+#List in this cannot be run -s flag 
+OMIT_LIST="rsh|ftrace|af_alg|pcrypt_aead01|fork12|ioctl02|mmap11|ima_measurements.sh|cpuset_hotplug_test.sh|cpuhotplug01.sh|data|files|cpuset_hotplug_test.sh|cpuhotplug01.sh|data|files|ioctl02|ima_measurements.sh|mmap11|getgroups03_16|cpuset_memory_pressure|"
+
+#IPSEC tests that cause ping fail 
+OMIT_NW_LIST="dccp_ipsec.sh|dccp_ipsec_vti.sh|sctp_ipsec.sh|sctp_ipsec_vti.sh|tcp_ipsec.sh|tcp_ipsec_vti.sh|udp_ipsec.sh|udp_ipsec_vti.sh|ssh-stress|dccp01|dns4-stress|dccp4_ipsec.sh|icmp-uni-basic.sh|if-addr-adddel|fanout01|ftp-download-stress.sh|ftp-upload-stress.sh|ftp01.sh|"
+
+#Tests that creates ltp_v0 or ltp_ns_veth interface. May impact LAB. So removing
+OMIT_NW_LIST2="dnsmasq_tests|dhcpd_tests.sh|geneve01.sh|geneve02.sh|gre01.sh|gre02.sh|ipvlan01.sh|macsec_lib.sh|macvlan01.sh|macvtap01.sh|mpls|sit01.sh|vlan01.sh|vlan02.sh|vlan03.sh|vxlan01.sh|vxlan02.sh|vxlan03.sh|vxlan04.sh|ipsec_lib.sh|mpls03.sh|mpls_lib.sh|netns_helper.sh|virt_lib.sh"
+
+FULL_OMIT_LIST="${OMIT_NW_LIST2}${OMIT_NW_LIST}${OMIT_LIST}${MEM_OMIT_LIST}${UNSUPPORT_ARCH}${TC_FAIL_LIST}"
+
+SECURITY_LIST="crypto cve ima kernel_misc pty securebits smack tpm_tools"
+SECURITY_FAIL_LIST="check_keepcaps|cpufreq_boost|cve-2015-3290|tpm|smt_smp|smack"
+NW_FAIL_LIST="net.rpc net.rpc_tests net.tirpc_tests net_stress.ipsec_icmp net_stress.ipsec_sctp net_stress.ipsec_tcp net_stress.ipsec_udp"
+BASE_FAIL_LIST="cacheflush01"
+
+#UNSUPPORTED_TEST_SUITES
+#hyperthreading power_management_tests power_management_tests_exclusive
