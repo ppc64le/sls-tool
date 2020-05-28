@@ -1,0 +1,28 @@
+IN-PROGRESS-TEST
+----------------
+Contains the list of active testcases. It is useful, during kernel oops/panic situation to identify the last run testcases
+
+MACHINE_INFO
+------------
+Initialization script that runs at the beginning of the script to dump all system/os level config. In addition it also runs the commands that are specified under MACHINE_INFO_COMMANDS in SLS_CONFIG
+
+REPORT.json
+-----------
+Provides the summary of test execution in terms of accumulated run percentage.
+
+SLS_CONFIG
+----------
+Copies the original configuration file for every fresh run
+
+SCENARIO_LIST
+-------------
+Lists down all dynamically generated scenario tests. This would be useful during -r for problem recreation.
+Format: testcase|testuite|iterations
+
+START.LTP_log
+-------------
+Run time logs are captured under this file, when started using ./start_sls.py.
+
+LTP_HTML_LOG
+------------
+Contains the ltp html results
