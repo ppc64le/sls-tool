@@ -1,0 +1,20 @@
+#[Test Parameters]
+TEST_HOURS=72
+WAIT_SCENARIO='NO'
+MIN_TEST_PER_SCENARIO=2
+MAX_TEST_PER_SCENARIO=8
+ITERATIONS=''
+MUST_TEST='fork02,waitpid10'
+EXCLUDE_TEST='zram01.sh,zram02.sh,zram03'
+IO_DISKS=''
+IO_FS=''
+MACHINE_INFO_COMMANDS='multipath -l, df -h, cat /proc/cmdline'
+
+
+#[Machine Parameters]
+TC_HTML_PATH='/LOGS/SLS/'
+SLS_DIR='/var/log/sls'
+LHOST=''
+RHOST=''
+PACKAGE_LIST=''
+PATH=$PATH:/opt/ltp:/opt/ltp/testcases/bin:/opt/ltp/testscripts
