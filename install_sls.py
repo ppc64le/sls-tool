@@ -113,9 +113,9 @@ if 'PACKAGE_LIST' in ltp_vars and ltp_vars['PACKAGE_LIST'].strip() != '':
 
 if os.environ['os_version'] == 'rhel' or os.environ['os_version'] == 'fedora':
 	if re.search('7', os.environ['VERSION'], re.M):
-		pack = "tpm* opencryptoki dnsmasq xinetd ftp vsftpd telnet telnet-server httpd traceroute dhcp* libaio-devel*"
+		pack = "tpm* opencryptoki dnsmasq xinetd ftp vsftpd telnet telnet-server httpd traceroute dhcp* libaio-devel* nfs-utils"
 	else:
-		pack = "tpm* opencryptoki dnsmasq xinetd ftp vsftpd telnet telnet-server httpd traceroute dhcp* kernel-modules-extra libaio-devel* libtirpc-devel"
+		pack = "tpm* opencryptoki dnsmasq xinetd ftp vsftpd telnet telnet-server httpd traceroute dhcp* kernel-modules-extra libaio-devel* libtirpc-devel nfs-utils"
 	mods = "xfrm dccp tunnel sctp"
 elif os.environ['os_version'] == 'sles':
 	if re.search('15', os.environ['VERSION'], re.M):
