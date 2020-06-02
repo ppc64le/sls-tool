@@ -22,13 +22,13 @@ Copy & Install
 -------------------------------------------------------------------------------
 ```
 $ git clone https://github.ibm.com/ISST-LTE/SLS_PYTHON/
-$ cd SLS_PYTHON ; $ ./setup_sls.py
+$ cd SLS_PYTHON ; $ ./install_sls.py
 ```
 Setting up SLS:
 -------------------------------------------------------------------------------
 It is necessary to prepare the test environment to effectively run SLS. This involves setting up the latest [LTP](https://github.com/linux-test-project/ltp) code, installing necessary RPMs, starting the services, loading modules etc.,
 ```
-setup_sls.py
+install_sls.py
 ```
 `WARNING` It is improtant to run this successfully before going to next step. Failing to install or start any services has to be manually addressed, else the associated LTP tests will fail.
 
@@ -70,12 +70,38 @@ To run testcases from [syscalls](https://github.com/linux-test-project/ltp/blob/
 ```
 Monitoring
 -------------------------------------------------------------------------------
+To view the status and details of tests running:
+```
+$ ./show_results.py
+```
+Review show_results.py usage and use accordingly
+```
+./show_results.py --help
+usage: show_results.py [-h] [-c] [-m] [-s] [-t] [-i] [-d]
+
+Show LTP Results
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -c          Show CPU Usage
+  -m          Show Memory Usage
+  -s          Show Test Scenarios
+  -t          Show Tests
+  -i          Show In Progress Tests
+  -d          Show Details of In Progress Tests
+```
 The hierarchical logs are created under the path specified by TC_HTML_PATH
 ```
 Default Path --> /LOGS/SLS/Distro Name/Distro Level/Machine_Name/Date & Time Stamp/
 ```
 Refer to [README](https://github.com/ppc64le/sls-tool/blob/master/README_MONITORING) to know about the logs created during execution
 
+Stopping tests
+-------------------------------------------------------------------------------
+To stop SLS tests
+```
+./stop_sls.py
+```
 Authors
 -------------------------------------------------------------------------------
 Original author, who developed the initial version of SLS under shell code
