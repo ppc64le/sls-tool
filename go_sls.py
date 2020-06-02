@@ -524,9 +524,10 @@ while True:
 		GetFreeCPU(log, tlog)
 		GetFreeMem(log, tlog)
 		GetFsSpace(log, tlog)
-		if t and CheckNw(log, ltp_vars) == 1:
-			lg(log, 'Network check failed, exiting...')
-			break
+		if t or n:
+			if CheckNw(log, ltp_vars) == 1:
+				lg(log, 'Network check failed, exiting...')
+				break
 		time.sleep(2)
 
 	CURRENT_TIME = datetime.datetime.now()
