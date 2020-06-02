@@ -70,12 +70,8 @@ if ret != 0:
 	
 	ret = RunCommand('ping -c 2 github.com > /dev/null 2>&1', ilog, 0, 0)
 	if ret != 0:
-		lg(ilog, 'ping github.com : FAIL')
-		lg(ilog, 'Copying LTP from local directory : ltp-master')
-		RunCommand('rm -rf %s/sls_ltp/*' % logdir, ilog)
-		RunCommand('mkdir -p %s/sls_ltp' % logdir, ilog)
-		RunCommand('cp -Rpa ./ltp-master/* %s/sls_ltp/' % logdir, ilog)
-		lg(ilog, 'LTP source code is copied to %s/sls_ltp directory' % logdir)
+		lg(ilog, 'ping github.com : FAIL, Please install LTP manually to proceed')
+		exit(1)
 	else:
 		lg(ilog,'ping github.com : PASS')
 		InstallPackage('git', ilog)

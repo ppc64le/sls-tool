@@ -17,7 +17,7 @@ Copies the original configuration file for every fresh run
 SCENARIO_LIST
 -------------
 Lists down all dynamically generated scenario tests. This would be useful during -r for problem recreation.
-Format: testcase|testuite|iterations
+Format: testcase(testuite|iterations)
 
 START.LTP_log
 -------------
