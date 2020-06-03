@@ -92,7 +92,7 @@ if not ( t or b or i or n or s or r):
 #Check if SLS is already Running
 command = "ps -eaf|grep go_sls|grep -v grep |wc -l"
 if int(RunCommand(command,slog,2,0)) > 0:
-	print("SLS instance is already running")
+	print("SLS is already running, if you wish to stop SLS please use: ./stop_sls.py")
 	exit(1)
 
 #Remove old log files in SLS_DIR

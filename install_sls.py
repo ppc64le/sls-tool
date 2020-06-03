@@ -50,12 +50,19 @@ else:
 
 #Create Log directory
 RunCommand('mkdir -p ' + logdir, None, 0, 0)
-RunCommand('rm -f %s/*' % logdir, None, 0, 0)
+
+ilog = logdir + '/install_ltp.log'
+
+#Check if SLS is already Running
+command = "ps -eaf|grep go_sls|grep -v grep |wc -l"
+if int(RunCommand(command,ilog,2,0)) > 0:
+	print("SLS is already running, if u wish to stop SLS please use: ./stop_sls.py")
+	exit(1)
 
 #Remove Log file
-ilog = logdir + '/install_ltp.log'
 lg(ilog,'Remove Old log:\n-------------------------', 0)
 RunCommand('rm -f ' + ilog, ilog)
+RunCommand('rm -f %s/*' % logdir, None, 0, 0)
 
 pack = "automake sysstat make gcc"
 packages = pack.split(' ')
@@ -119,7 +126,7 @@ if os.environ['os_version'] == 'rhel' or os.environ['os_version'] == 'fedora':
 	mods = "xfrm dccp tunnel sctp"
 elif os.environ['os_version'] == 'sles':
 	if re.search('15', os.environ['VERSION'], re.M):
-		pack = "lftp telnet telnet-server systemd openssh httpd iftop vsftpd syslog nfs-kernel-server nfs-client iputils"
+		pack = "lftp telnet telnet-server systemd openssh httpd iftop vsftpd syslog nfs-kernel-server nfs-client iputils libtirpc-devel"
 	else:
 		pack = "lftp telnet rlogin rcp httpd iftop vsftpd syslog"
 	
