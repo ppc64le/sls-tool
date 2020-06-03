@@ -105,7 +105,7 @@ To stop SLS tests
 
 Debugging SLS
 -------------------------------------------------------------------------------
-In order to help SLS developers during code problems, please collect the logs and send
+In order to help SLS developers during code problems, please collect sls.tar and send
 ```
 ./collect_logs.py
 ```
