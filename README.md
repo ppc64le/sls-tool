@@ -21,7 +21,7 @@ Python
 Copy & Install
 -------------------------------------------------------------------------------
 ```
-$ git clone https://github.ibm.com/ISST-LTE/SLS_PYTHON/
+$ git clone https://github.com/ppc64le/sls-tool
 $ cd SLS_PYTHON ; $ ./install_sls.py
 ```
 Setting up SLS:
