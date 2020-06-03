@@ -22,7 +22,7 @@ Copy & Install
 -------------------------------------------------------------------------------
 ```
 $ git clone https://github.com/ppc64le/sls-tool
-$ cd sls-tool ; $ ./install_sls.py
+$ cd sls-tool ; ./install_sls.py
 ```
 Setting up SLS:
 -------------------------------------------------------------------------------
