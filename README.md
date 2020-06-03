@@ -102,6 +102,13 @@ To stop SLS tests
 ```
 ./stop_sls.py
 ```
+
+Debugging SLS
+-------------------------------------------------------------------------------
+In order to help SLS developers during code problems, please collect the logs and send
+```
+./collect_logs.py
+```
 Authors
 -------------------------------------------------------------------------------
 Original author, who developed the initial version of SLS under shell code
