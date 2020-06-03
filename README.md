@@ -18,17 +18,17 @@ Prerequisites
 -------------------------------------------------------------------------------
 Python 
 
-Copy & Install
+Copy SLS
 -------------------------------------------------------------------------------
 ```
 $ git clone https://github.com/ppc64le/sls-tool
-$ cd sls-tool ; ./install_sls.py
+$ cd sls-tool
 ```
 Setting up SLS:
 -------------------------------------------------------------------------------
 It is necessary to prepare the test environment to effectively run SLS. This involves setting up the latest [LTP](https://github.com/linux-test-project/ltp) code, installing necessary RPMs, starting the services, loading modules etc.,
 ```
-install_sls.py
+./install_sls.py
 ```
 `WARNING` It is improtant to run this successfully before going to next step. Failing to install or start any services has to be manually addressed, else the associated LTP tests will fail.
 
