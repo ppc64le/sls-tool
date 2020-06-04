@@ -129,21 +129,34 @@ if b or i or n or t or r:
 		usage()
 
 #Check IO_DISKS if IO tests need to executed
-if i:
-	if 'IO_DISKS' in ltp_vars and ltp_vars['IO_DISKS'] != '':
-		lg(slog, '\nPreparing Disks for IO tests:\n------------------------------')
-		FSTYPES = ''
-		if 'IO_FS' in ltp_vars and ltp_vars['IO_FS']:
-			FSTYPES = ltp_vars['IO_FS'].strip()
-		IODISKS = ltp_vars['IO_DISKS'].strip()
-		fs_ret = CreateFS(IODISKS, FSTYPES, slog)
-		if fs_ret == 1:
-			exit(1)
-		elif fs_ret == 2:
-			lg(slog, '/tmp will be used by IO tests')
-		else:
-			lg(slog, 'IO disks will be used for IO tests')	
-		lg(slog, '------------------------------\n')
+if i or s:
+	io_tests = 0
+	if s:
+		suites = s[0].split(',')
+		suites = [x for x in suites if x]
+		tests_list = GetVars('./tc_group')
+		IO_TESTS = tests_list['IO_LIST'].strip().split(' ')
+		IO_TESTS = [x for x in IO_TESTS if x]
+		for suite in suites:
+			suite = suite.strip()
+			if suite in IO_TESTS:
+				io_tests = 1
+				break
+	if i or io_tests == 1:
+		if 'IO_DISKS' in ltp_vars and ltp_vars['IO_DISKS'] != '':
+			lg(slog, '\nPreparing Disks for IO tests:\n------------------------------')
+			FSTYPES = ''
+			if 'IO_FS' in ltp_vars and ltp_vars['IO_FS']:
+				FSTYPES = ltp_vars['IO_FS'].strip()
+			IODISKS = ltp_vars['IO_DISKS'].strip()
+			fs_ret = CreateFS(IODISKS, FSTYPES, slog)
+			if fs_ret == 1:
+				exit(1)
+			elif fs_ret == 2:
+				lg(slog, '/tmp will be used by IO tests')
+			else:
+				lg(slog, 'IO disks will be used for IO tests')	
+			lg(slog, '------------------------------\n')
 
 #Check MUST TESTS and EXCLUDE TESTS
 for TST in ['MUST_TEST', 'EXCLUDE_TEST']:
