@@ -16,8 +16,10 @@ LTP contains large number of testcases. It is important to organise the tests in
 
 Prerequisites
 -------------------------------------------------------------------------------
+```
 Python 
 Passwordless ssh should be setup between LHOST and RHOST
+```
 
 Copy SLS
 -------------------------------------------------------------------------------
