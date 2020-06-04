@@ -823,8 +823,12 @@ def CreateFS(DISKS, FSTYPES, log):
 			command = 'mkfs.%s %s %s' % (FS, force_option, D)
 			lg(log,command)
 			if int(RunCommand(command, log, 0, 1)) != 0:
-				lg(log, '%s : Failed' % command)
-				return 1	
+				chkcommand = "blkid %s|grep -w 'TYPE='|wc -l" % D
+				if int(RunCommand(chkcommand, log, 2, 1)) == 0:
+					lg(log, '%s : Failed' % command)
+					return 1	
+				else:
+					lg(log, 'FS exists on %s, so proceeding' % D)
 			command = 'mkdir -p /tmp/ltp_io%d' % dnum
 			RunCommand(command, log, 1, 1)
 			lg(log, 'Mounting Disk:%s to /tmp/ltp_io%d' % (D,dnum))
