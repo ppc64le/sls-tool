@@ -263,7 +263,24 @@ if t or n:
 		if ltp_vars['WAIT_SCENARIO'] == 'NO':
 			lg(log, "Overriding WAIT_SCENARIO to YES")
 		os.environ['WAIT_SCENARIO'] = 'YES'
-
+net_or_nfs = 0
+if s:
+	tsuites = s[0].split(',')
+	tsuites = [x for x in tsuites if x]
+	tests_list = GetVars('./tc_group')
+	NW1_TESTS = tests_list['NW1_LIST'].strip().split(' ')
+	NW1_TESTS = [x for x in NW1_TESTS if x]
+	NW2_TESTS = tests_list['NW2_LIST'].strip().split(' ')
+	NW2_TESTS = [x for x in NW2_TESTS if x]
+	NFS_TESTS = tests_list['NFS_LIST'].strip().split(' ')
+	NFS_TESTS = [x for x in NFS_TESTS if x]
+	for suite in tsuites:
+		suite = suite.strip()
+		if suite in NW1_TESTS or suite in NW2_TESTS or suite in NFS_TESTS:
+			net_or_nfs = 1
+			break
+	if net_or_nfs == 1:
+		os.environ['WAIT_SCENARIO'] = 'YES'
 
 scen = 0
 scenario_file = "%s/SCENARIO_LIST" % os.environ['TC_OUTPUT']
@@ -524,7 +541,7 @@ while True:
 		GetFreeCPU(log, tlog)
 		GetFreeMem(log, tlog)
 		GetFsSpace(log, tlog)
-		if t or n:
+		if t or n or net_or_nfs == 1:
 			if CheckNw(log, ltp_vars) == 1:
 				lg(log, 'Network check failed, exiting...')
 				break

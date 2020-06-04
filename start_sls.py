@@ -172,12 +172,33 @@ lg(slog, 'Exporting LTP Variables')
 lg(slog, 'Creating Log directories')
 ltp_vars = ExportVars(ltp_vars, slog)
 
-#Check if Netowrk variables are declared if network test has to be executed
+#Check if Network variables are declared if network test has to be executed
 if t or n:
 	scen_file = os.environ['TC_OUTPUT'] + '/SCENARIO_LIST'
 	lg(slog, 'Checking LHOST and RHOST setting for Network Tests')
 	if CheckNetwork(ltp_vars, slog, scen_file) == 1:
 		exit(1)
+if s:
+	net_or_nfs = 0
+	suites = s[0].split(',')
+	suites = [x for x in suites if x]
+	tests_list = GetVars('./tc_group')
+	NW1_TESTS = tests_list['NW1_LIST'].strip().split(' ')
+	NW1_TESTS = [x for x in NW1_TESTS if x]
+	NW2_TESTS = tests_list['NW2_LIST'].strip().split(' ')
+	NW2_TESTS = [x for x in NW2_TESTS if x]
+	NFS_TESTS = tests_list['NFS_LIST'].strip().split(' ')
+	NFS_TESTS = [x for x in NFS_TESTS if x]
+	for suite in suites:
+		suite = suite.strip()
+		if suite in NW1_TESTS or suite in NW2_TESTS or suite in NFS_TESTS:
+			net_or_nfs = 1
+			break
+	if net_or_nfs == 1:
+		scen_file = os.environ['TC_OUTPUT'] + '/SCENARIO_LIST'
+		lg(slog, 'Checking LHOST and RHOST setting for Network Tests')
+		if CheckNetwork(ltp_vars, slog, scen_file) == 1:
+			exit(1)
 
 #Disable IPv6
 command = "sysctl net.ipv6.conf.all.disable_ipv6=1"
