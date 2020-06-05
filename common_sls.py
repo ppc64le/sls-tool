@@ -277,26 +277,34 @@ def ExportVars(ltp_vars, log):
 
 
 def ChangeLTP(log):
-	lg(log, "Fixing LTP Code to enable rcp01", 0)
+	lg(log, "Fixing LTP Code to enable rcp01 and ftp01")
 	ltpbin = os.environ['ltp_bin']
 	command = "sed 's/rsh/ssh/g' %s/rcp01.sh > %s/rcp01.sh.new" % (ltpbin, ltpbin)
 	RunCommand(command, log, 1)
 	command = "mv -f %s/rcp01.sh.new %s/rcp01.sh" % (ltpbin, ltpbin)
 	RunCommand(command, log, 1)
-	
-	lg(log, "Fixing LTP Code to enable ftp01", 0)
 	command = "sed 's/rsh/ssh/g' %s/ftp01.sh > %s/ftp01.sh.new" % (ltpbin, ltpbin)
 	RunCommand(command, log, 1)
 	command = "mv -f %s/ftp01.sh.new %s/ftp01.sh" % (ltpbin, ltpbin)
 	RunCommand(command, log, 1)
 
-	lg(log, "Fixing LTP code to enable mcast4-queryfld related tests", 0)
+	lg(log, "Fixing LTP code to enable mcast4-queryfld related tests")
 	command = "sed 's/exists cut locale rsh/exists cut locale ssh/g' %s/check_envval > %s/check_envval.new" % (ltpbin, ltpbin)
 	RunCommand(command, log, 1)
 	command = "mv -f %s/check_envval.new %s/check_envval" % (ltpbin, ltpbin)
 	RunCommand(command, log, 1)
+
+	lg(log, "Change IO tests to use $TMPDIR")
+	command = "sed -i 's/\/test\//$TMPDIR\//g' /opt/ltp/runtest/lvm.part1"
+	RunCommand(command, log, 0, 0)
+	command = "sed -i 's/\/test\//$TMPDIR\//g' /opt/ltp/runtest/lvm.part2"
+	RunCommand(command, log, 0, 0)
+	command = "sed -i 's/\/test\//$TMPDIR\//g' /opt/ltp/runtest/scsi_debug.part1"
+	RunCommand(command, log, 0, 0)
+	command = "sed -i 's/\/tmp\//$TMPDIR\//g' /opt/ltp/runtest/fcntl-locktests"
+	RunCommand(command, log, 0, 0)
 	
-	lg(log, "Dropping unsupported tests", 1)
+	lg(log, "Dropping unsupported tests")
 	ltppath = os.environ['ltp_path'] + '/runtest'
 	command = "uname -r|awk -F'.' '{print $1\".\"$2}'"
 	uname_val = RunCommand(command, log, 2, 0)
