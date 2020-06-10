@@ -66,6 +66,7 @@ RunCommand('rm -f %s/*' % logdir, None, 0, 0)
 
 pack = "automake sysstat make gcc"
 packages = pack.split(' ')
+packages = [x for x in packages if x]
 
 ret = RunCommand('/opt/ltp/runltp --help > /dev/null 2>&1', ilog, 0, 0)
 if ret != 0:
@@ -114,6 +115,7 @@ os.environ['VERSION'] = GetOS('VERSION')
 lg(ilog,'\nInstalling required packages:\n-------------------------')
 if 'PACKAGE_LIST' in ltp_vars and ltp_vars['PACKAGE_LIST'].strip() != '':
 	packages = ltp_vars['PACKAGE_LIST'].split(',')
+	packages = [x for x in packages if x]
 	for p in packages:
 		lg(ilog, 'Installing : ' + p)
 		InstallPackage(p, ilog, 0)
@@ -134,16 +136,19 @@ elif os.environ['os_version'] == 'sles':
 
 if 'MODULES' in ltp_vars and ltp_vars['MODULES'] != '':
 	modules = ltp_vars['MODULES'].split(' ')
+	modules = [x for x in modules if x]
 	for m in modules:
 		lg(ilog, 'Loading : ' + m)
 		LoadModule(m, ilog)
 
 packages = pack.split(' ')
+packages = [x for x in packages if x]
 for p in packages:
 	lg(ilog, 'Installing : ' + p)
 	InstallPackage(p, ilog, 0) 
 
 modules = mods.split(' ')
+modules = [x for x in modules if x]
 for m in modules:
 	lg(ilog, 'Loading : ' + m)
 	LoadModule(m, ilog)
