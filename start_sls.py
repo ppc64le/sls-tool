@@ -178,6 +178,7 @@ if i or s:
 for TST in ['MUST_TEST', 'EXCLUDE_TEST']:
 	if TST in ltp_vars and ltp_vars[TST] != '':
 		mtests = ltp_vars[TST].split(',')
+		mtests = [x for x in mtests if x]
 		for mt in mtests:
 			mt = mt.strip()
 			if mt == "":
@@ -190,7 +191,9 @@ for TST in ['MUST_TEST', 'EXCLUDE_TEST']:
 				exit(1)
 	if TST == 'EXCLUDE_TEST' and 'MUST_TEST' in ltp_vars and ltp_vars['MUST_TEST'] != '' and 'EXCLUDE_TEST' in ltp_vars:
 		mtests = ltp_vars['MUST_TEST'].split(',')
+		mtests = [x for x in mtests if x]
 		etests = ltp_vars['EXCLUDE_TEST'].split(',')
+		etests = [x for x in etests if x]
 		for et in etests:
 			if et in mtests:
 				lg(slog, '%s: is mentioned both in MUST_TEST and EXCLUDE_TEST' % et)
@@ -250,10 +253,12 @@ else:
 	mods = ''
 if 'MODULES' in ltp_vars and ltp_vars['MODULES'] != '':
 	modules = ltp_vars['MODULES'].split(' ')
+	modules = [x for x in modules if x]
 	for m in modules:
 		lg(slog, 'Loading : ' + m)
 		LoadModule(m, slog)
 modules = mods.split(' ')
+modules = [x for x in modules if x]
 for m in modules:
 	lg(slog, 'Loading : ' + m)
 	LoadModule(m, slog)
@@ -282,6 +287,7 @@ if s:
 		lg(slog, 'Please provide only one argument : test suites names comma separated')
 		exit(1)
 	suites = s[0].split(',')
+	suites = [x for x in suites if x]
 	for suite in suites:
 		command = "ls /opt/ltp/runtest/|grep -w '^%s$'|wc -l" % suite
 		if int(RunCommand(command,slog, 2, 0)) == 0:

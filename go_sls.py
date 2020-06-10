@@ -223,14 +223,17 @@ command = "ls -1 %s| grep -v -E \"%s\" | sort -R|grep -v \"^[1-9]\"|tr '\n' '^'"
 output = RunCommand(command, tlog, 2, 0)
 if FOCUS_AREA == '' and not s:
 	test_suite = output.split('^')
+	test_suite = [x for x in test_suite if x]
 else:
 	all_test_suite = output.split('^')
+	all_test_suite = [x for x in all_test_suite if x]
 	test_suite = []
 	focus_suites = []
 	if s:
 		AREALIST = s[0].split(',')
 	else:
 		AREALIST = FOCUS_AREA.split(' ')
+	AREALIST = [x for x in AREALIST if x]
 	for fcs in AREALIST:
 		if fcs != '':
 			command = "ls /opt/ltp/runtest/|grep %s|wc -l" % fcs
@@ -471,6 +474,7 @@ while True:
 	#Add must test testcases
 	if 'MUST_TEST' in ltp_vars:
 		must_tests = ltp_vars['MUST_TEST'].strip().split(',')
+		must_tests = [x for x in must_tests if x]
 		for test in must_tests:
 			test = test.strip()
 			if test == '':
