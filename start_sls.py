@@ -128,6 +128,22 @@ if b or i or n or t or r:
 		lg(slog, "Cannot execute Test Suites with any Focus Area mentioned")
 		usage()
 
+#Unmount IO filesystems if any
+lg(slog, 'Trying to umount sls related filesystems, if any...')
+command = "mount |grep -e '/tmp/ltp-' -e '/tmp/ltp_'|awk '{print $3}'|tr '\n' '^'"
+mntpoints = RunCommand(command, slog, 2, 0).strip().split('^')
+mntpoints = [x for x in mntpoints if x]
+for mp in mntpoints:
+	lg(slog, 'Unmounting : %s' % mp)
+	command = 'umount %s' % mp
+	if int(RunCommand(command, slog, 0, 0)) != 0:
+		command = 'umount -f %s' % mp
+		if int(RunCommand(command, slog, 0, 0)) != 0:
+			command = 'umount -l %s' % mp
+			if int(RunCommand(command, slog, 0, 0)) != 0:
+				lg(slog,'Failed to umount : %s, please umount manually' % mp)
+				exit(1)
+
 #Check IO_DISKS if IO tests need to executed
 if i or s:
 	io_tests = 0
