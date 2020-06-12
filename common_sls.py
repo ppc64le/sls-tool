@@ -584,8 +584,6 @@ def MachineInfo(log, ltp_vars):
 
 
 def CheckNw(log, ltp_vars):
-	d = datetime.datetime.now()
-	dat = "%s/%s/%s,%s:%s:%s" % (d.strftime('%Y'),d.strftime('%m'),d.strftime('%d'),d.strftime('%H'),d.strftime('%M'),d.strftime('%S'))
 	ping_target = ''
 	if ('IPV4_RHOST' in os.environ) and os.environ['IPV4_RHOST'] != '':
 		ping_target = os.environ['IPV4_RHOST'].strip()
@@ -600,24 +598,22 @@ def CheckNw(log, ltp_vars):
 		check_iter = 1
 		while check_iter <= 30:
 			if RunCommand("ping -c 4 " + ping_target + '> /dev/null', None, 0, 0) != 0:
-				line = "[%s] [CheckNw] [info] ping to %s Failed, retry:%d" % (dat,ping_target,check_iter)
-				lg(log, line, 0)
+				line = "[CheckNw] [info] ping to %s Failed, retry:%d" % (ping_target,check_iter)
+				lg(log, line, 0, 1)
 			else:
-				line = "[%s] [CheckNw] [info] ping to %s Pass, retry:%d" % (dat,ping_target,check_iter)
-				lg(log, line, 0)
+				line = "[CheckNw] [info] ping to %s Pass, retry:%d" % (ping_target,check_iter)
+				lg(log, line, 0, 1)
 				return 0
 			check_iter +=1
 		return 1
 	else:
-		line = "[%s] [CheckNw] [info] ping to %s Pass" % (dat,ping_target)
-		lg(log, line, 0)
+		line = "[CheckNw] [info] ping to %s Pass" % (ping_target)
+		lg(log, line, 0, 1)
 	return 0
 
 
 def GetFreeCPU(log, tlog):
 	while True:
-		d = datetime.datetime.now()
-		dat = "%s/%s/%s,%s:%s:%s" % (d.strftime('%Y'),d.strftime('%m'),d.strftime('%d'),d.strftime('%H'),d.strftime('%M'),d.strftime('%S'))
 		command = "top -b -n 4 | grep Cpu | tail -n 1 | cut -f 4 -d , | cut -f 1 -d .| sed 's/ //g'"
 		idle_cpu = int(RunCommand(command, tlog, 2, 0))
 		time.sleep(2)
@@ -628,53 +624,50 @@ def GetFreeCPU(log, tlog):
 		idle_cpu += int(RunCommand(command, tlog, 2, 0))
 		time.sleep(1)
 		idle_cpu /= 4
-		cpu_line = "[%s] [GetFreeCPU] [info] Avg idle_cpu is %d" % (dat,idle_cpu)
-		lg(log, cpu_line, 0)
+		cpu_line = "[GetFreeCPU] [info] Avg idle_cpu is %d" % (idle_cpu)
+		lg(log, cpu_line, 0, 1)
 		
 		if idle_cpu < 27:
 			rnum = GetRandom(327)
-			line =	"[%s] [GetFreeCPU] [warn] Not enough free CPUs. Waiting for %d seconds." % (dat,rnum)
-			lg(log, line, 0)	
+			line =	"[GetFreeCPU] [warn] Not enough free CPUs. Waiting for %d seconds." % (rnum)
+			lg(log, line, 0, 1)
 			time.sleep(rnum)
 		else:
-			line = "[%s] [GetFreeCPU] [info] Idle CPU: %d" % (dat,idle_cpu)
-			lg(log, line, 0)
+			line = "[GetFreeCPU] [info] Idle CPU: %d" % (idle_cpu)
+			lg(log, line, 0, 1)
 			break
+
 
 def GetFreeMem(log, tlog):
 	while True:
-		d = datetime.datetime.now()
-		dat = "%s/%s/%s,%s:%s:%s" % (d.strftime('%Y'),d.strftime('%m'),d.strftime('%d'),d.strftime('%H'),d.strftime('%M'),d.strftime('%S'))
 		lg(tlog, "Flushing the system buffers (sync). Tests not progressing? sync might by hung", 0)
 		RunCommand("sync", tlog, 2, 0)
 		RunCommand("echo 3 > /proc/sys/vm/drop_caches", tlog, 2, 0)
 		free_mem = RunCommand("free -m | awk '{print $4}' | grep -v [a-z] | head -n 1", tlog, 2, 0)
-		line = "[%s] [GetFreeMem] [info] Available free memory %s MB" % (dat, free_mem.strip())
-		lg(log, line,0)
+		line = "[GetFreeMem] [info] Available free memory %s MB" % (free_mem.strip())
+		lg(log, line, 0, 1)
 		free_swap = RunCommand("free -m | awk '{print $4}' | grep -v [a-z] | tail -n 1", tlog, 2, 0)
-		line = "[%s] [GetFreeMem] [info] Available swap space %s MB" % (dat, free_swap.strip())
-		lg(log, line,0)
+		line = "[GetFreeMem] [info] Available swap space %s MB" % (free_swap.strip())
+		lg(log, line, 0, 1)
 		
 		if int(free_mem) < 427:
 			rnum = GetRandom(327)
-			line = "[%s] [GetFreeMem] [warn] Not enough free Memory. Waiting for %d seconds." % (dat,rnum)
-			lg(log, line,0)
+			line = "[GetFreeMem] [warn] Not enough free Memory. Waiting for %d seconds." % (rnum)
+			lg(log, line, 0, 1)
 			time.sleep(rnum)
 		else:
-			line = "[%s] [GetFreeMem] [info] Free Memory %s MB" % (dat, free_mem.strip())
-			lg(log, line,0)
+			line = "[GetFreeMem] [info] Free Memory %s MB" % (free_mem.strip())
+			lg(log, line, 0, 1)
 			break
 
 
 def GetFsSpace(log, tlog):
 	while True:
-		d = datetime.datetime.now()
-		dat = "%s/%s/%s,%s:%s:%s" % (d.strftime('%Y'),d.strftime('%m'),d.strftime('%d'),d.strftime('%H'),d.strftime('%M'),d.strftime('%S'))
 		command = "df -hl | grep -w '/$' | awk ' {print $5}' | cut -f 1 -d '%'"
 		root_fs_size = int(RunCommand(command, tlog, 2, 0))
 		if root_fs_size > 90:
-			wline = "[%s] [GetFsSpace] [warn] / is more than 90%%. IO tests using /tmp will fail" % dat
-			lg(log, wline, 0)
+			wline = "[GetFsSpace] [warn] / is more than 90%%. IO tests using /tmp will fail"
+			lg(log, wline, 0, 1)
 			RunCommand('wall / filesystem is close to 100%%. Please fix asap', tlog, 2)
 			lg(log, "Cleaning up loop devices")
 			RunCommand("losetup -D", tlog)
