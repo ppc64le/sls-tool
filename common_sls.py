@@ -423,7 +423,7 @@ def StartService(log):
 		RunCommand("systemctl  enable nfs-server", log, 1)
 		RunCommand("systemctl  start nfs", log, 1)
 		RunCommand("systemctl  enable nfs", log, 1)
-		RunCommand("systemctl  start syslog", log, 1)
+		RunCommand("systemctl  start syslog", log, 0)
 		RunCommand("systemctl  enable syslog", log, 0)
 	return 0
 
@@ -914,7 +914,7 @@ def OOMKill(log, slog):
 		time.sleep(2)
 	
 		command = 'ps -eaf|grep go_sls|grep -v grep|wc -l'
-		if int(RunCommand(command, log, 2, 0)) == 0:
+		if int(RunCommand(command, log, 2, 0)) <= 1:
 			lg(slog, "Looks like go_sls is completed, OOMKiller is exiting")
 
 
