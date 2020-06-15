@@ -67,21 +67,27 @@ if not os.path.exists(MASTER_FILE):
 	print("Not Found: %s" % MASTER_FILE)
 	exit(1)
 
+tlog = '%s/ltp_show_results.log' % logdir
 lock_file = open('%s/ltp.lock' % logdir, "w")
+lock_count = 0
 while True:
 	try:
 		fcntl.lockf(lock_file.fileno(), fcntl.LOCK_EX|fcntl.LOCK_NB)
 	except IOError:
 		print("Please wait, trying read REPORT.json")
 		time.sleep(GetRandom(10))
+		lock_count += 1
 	else:
 		break
+	if lock_count == 10:
+		command = 'rm -f %s/ltp.lock' % logdir
+		RunCommand(command, tlog, 1, 0)
+		time.sleep(2)
 
 with open(MASTER_FILE, 'r') as g:
 	REPORT = json.load(g)
 g.close()
 
-tlog = '%s/ltp_show_results.log' % logdir
 command = "ps -eaf|grep go_sls|grep -v grep|wc -l"
 if int(RunCommand(command, tlog, 2, 0)) == 0 and REPORT['RESULTS']['STATUS'] == 'In Progress':
 	REPORT['RESULTS']['STATUS'] = 'ABORTED'

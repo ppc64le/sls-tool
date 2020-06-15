@@ -29,7 +29,7 @@ RIT="stress|aio|mem|fork|mmap|cpu|oom|cgroup"
 MEM_OMIT_LIST="sync01|sync03|msync04|mkdir02|sysctl01|memcg_control_test.sh|netns_breakns.sh|mkfs01.sh|memcg_limit_in_bytes.sh|mesgq_nstest|mkswap01.sh|mmapstress03|memcg_max_usage_in_bytes_test.sh|mmap2|madvise07|insmod01.sh|inotify09|max_map_count|futex_wait05|icmp-uni-vti.sh|ftrace_stress_test.sh|idle_cpu_mem|gettimeofday02|gre01.sh|fs_di|ksm05|fs_fill|ftest07|fs_racer.sh|hackbench|oom05|ln_tests.sh|fork13|ftp-upload-stress|rcp01|sendfile09|min_free_kbytes|oom01|cpuset_memory_pressure|msgstress04|msgstress01|msgstress02|msgstress03|"
 
 #List in this cannot be run -s flag 
-OMIT_LIST="rsh|ftrace|af_alg|pcrypt_aead01|fork12|ioctl02|mmap11|ima_measurements.sh|cpuset_hotplug_test.sh|cpuhotplug01.sh|data|files|cpuset_hotplug_test.sh|cpuhotplug01.sh|data|files|ioctl02|ima_measurements.sh|mmap11|getgroups03_16|cpuset_memory_pressure|"
+OMIT_LIST="rsh|ftrace|af_alg|pcrypt_aead01|fork12|ioctl02|mmap11|ima_measurements.sh|cpuset_hotplug_test.sh|cpuhotplug01.sh|data|files|cpuset_hotplug_test.sh|cpuhotplug01.sh|data|files|ioctl02|ima_measurements.sh|mmap11|getgroups03_16|cpuset_memory_pressure|pty01|pty02|pty03|pty04|"
 
 #IPSEC tests that cause ping fail 
 OMIT_NW_LIST="dccp_ipsec.sh|dccp_ipsec_vti.sh|sctp_ipsec.sh|sctp_ipsec_vti.sh|tcp_ipsec.sh|tcp_ipsec_vti.sh|udp_ipsec.sh|udp_ipsec_vti.sh|ssh-stress|dccp01|dns4-stress|dccp4_ipsec.sh|icmp-uni-basic.sh|if-addr-adddel|fanout01|ftp-download-stress.sh|ftp-upload-stress.sh|ftp01.sh|"
