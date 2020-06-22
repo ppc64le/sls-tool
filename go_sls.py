@@ -41,6 +41,7 @@ import threading
 import fcntl
 import time
 import json
+import signal
 from common_sls import *
 
 def usage():
@@ -595,4 +596,5 @@ fcntl.flock(lock_file, fcntl.LOCK_UN)
 line = "Updated STATUS to COMPLETE in REPORT.json"
 lg(log, line, 0)
 lg(log, "Completed full suite, Thanks for using SLS Tool", 0)
+os.killpg(0, signal.SIGINT)
 process.terminate() 
