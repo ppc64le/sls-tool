@@ -37,7 +37,7 @@ parser = argparse.ArgumentParser(description='Show LTP Results')
 parser.add_argument('-c', action="store_true", dest="c", help='Show CPU Usage')
 parser.add_argument('-m', action="store_true", dest="m", help='Show Memory Usage')
 parser.add_argument('-s', action="store_true", dest="s", help='Show Test Scenarios')
-parser.add_argument('-t', action="store_true", dest="t", help='Show Tests')
+parser.add_argument('-t', action="store", dest="t", nargs="?", default='all', help='Show Tests')
 parser.add_argument('-i', action="store_true", dest="i", help='Show In Progress Tests')
 parser.add_argument('-d', action="store_true", dest="d", help='Show Details of In Progress Tests')
 args = parser.parse_args()
@@ -164,7 +164,6 @@ if args.i or args.d:
 	else:
 		print("%s file is not present" % INPROGRESS)
 
-
 if args.s:
 	print("")
 	SCEN_FILE = MASTER_FILE.replace('REPORT.json','SCENARIO_LIST')
@@ -176,13 +175,35 @@ if args.s:
 			print(scn.strip())
 	else:
 		print("%s file is not present" % SCEN_FILE)
-if args.t:
+
+if args.t != 'all':
 	print("")
+	if args.t is not None:
+		res_types = args.t.split(',')
+		allowed_types = ['fail', 'pass', 'brok', 'skip', 'conf']
+		caps_types = [x.upper() for x in allowed_types]
+		for rtype in res_types:
+			if (rtype not in allowed_types) and (rtype not in caps_types):
+				print('Wrong argument to -t : %s' % rtype)
+				exit(1)
 	tests = REPORT['TESTS']
 	if tests != '':
-		print('TESTS:\n----------')
+		if args.t is None:
+			print('ALL TESTS:\n----------')
+		else:
+			print('%s TESTS:\n----------------' % args.t.upper())
 		for test in tests:
-			print(test + " " + str(tests[test]))
+			if args.t is None:
+				print(test + " " + str(tests[test]))
+			else:
+				test_results = []
+				for rtype in res_types:
+					RT = 'TOTAL_%s' % rtype.upper()
+					testline = '%s %s' % (test, str(tests[test]))
+					if int(tests[test][RT]) != 0 and testline not in test_results:
+						test_results.append(testline)
+				for res in test_results:
+					print(str(res))	
 	else:
 		print("No test report generated yet")
 print('------------------------------------------------------\n')
