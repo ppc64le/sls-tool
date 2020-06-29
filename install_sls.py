@@ -122,15 +122,15 @@ if 'PACKAGE_LIST' in ltp_vars and ltp_vars['PACKAGE_LIST'].strip() != '':
 
 if os.environ['os_version'] == 'rhel' or os.environ['os_version'] == 'fedora':
 	if re.search('7', os.environ['VERSION'], re.M):
-		pack = "tpm* opencryptoki dnsmasq xinetd ftp vsftpd telnet telnet-server httpd traceroute dhcp* libaio-devel* nfs-utils"
+		pack = "tpm* opencryptoki dnsmasq xinetd ftp vsftpd telnet telnet-server httpd traceroute dhcp* libaio-devel* nfs-utils numactl* libaio* bzip2"
 	else:
-		pack = "tpm* opencryptoki dnsmasq xinetd ftp vsftpd telnet telnet-server httpd traceroute dhcp* kernel-modules-extra libaio-devel* libtirpc-devel nfs-utils psmisc"
+		pack = "tpm* opencryptoki dnsmasq xinetd ftp vsftpd telnet telnet-server httpd traceroute dhcp* kernel-modules-extra libaio-devel* libtirpc-devel nfs-utils psmisc numactl* libaio* bzip2"
 	mods = "xfrm dccp tunnel sctp"
 elif os.environ['os_version'] == 'sles':
 	if re.search('15', os.environ['VERSION'], re.M):
-		pack = "lftp telnet telnet-server systemd openssh httpd iftop vsftpd syslog nfs-kernel-server nfs-client iputils libtirpc-devel psmisc"
+		pack = "lftp telnet telnet-server systemd openssh httpd iftop vsftpd syslog nfs-kernel-server nfs-client iputils libtirpc-devel psmisc numactl* libaio* bzip2"
 	else:
-		pack = "lftp telnet rlogin rcp httpd iftop vsftpd syslog psmisc"
+		pack = "lftp telnet rlogin rcp httpd iftop vsftpd syslog psmisc numactl* libaio* bzip2"
 	
 	mods = ''
 

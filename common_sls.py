@@ -305,6 +305,10 @@ def ChangeLTP(log):
 	RunCommand(command, log, 0, 0)
 	
 	lg(log, "Dropping unsupported tests")
+	arch = RunCommand("uname -i",log,2,0).strip()
+	if arch == 'ppc64' or arch == 'ppc64le':
+		command = "sed -i '/_16/d' /opt/ltp/runtest/syscalls"
+		RunCommand(command, log, 0, 0)
 	ltppath = os.environ['ltp_path'] + '/runtest'
 	command = "uname -r|awk -F'.' '{print $1\".\"$2}'"
 	uname_val = RunCommand(command, log, 2, 0)
