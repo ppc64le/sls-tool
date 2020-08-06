@@ -262,6 +262,19 @@ def ExportVars(ltp_vars, log):
 	os.environ['LTP_TIMEOUT_MUL'] = '40'
 	os.environ['TST_DISABLE_APPARMOR'] = '1'
 	os.environ['LTP_RSH'] = 'ssh'
+
+	if 'EXPORT_VARIABLES' in ltp_vars and ltp_vars['EXPORT_VARIABLES'] != '':
+		exp_variables = ltp_vars['EXPORT_VARIABLES'].split(',')
+		exp_variables = [x for x in exp_variables if x]
+		for evar in exp_variables:
+			if len(evar.split(':')) != 2:
+				lg(log, 'Invalid entry : %s in EXPORT_VARIABLES' % evar)
+				exit(1)
+			else:
+				key = evar.split(':')[0].strip()
+				value = evar.split(':')[1].strip()
+				os.environ[key] = value
+				lg(log, 'Exported %s' % evar)
 		
 	os.environ['LTPROOT'] = '/opt/ltp'
 	#os.environ['PS1'] = '\[\e[31m\]\u@\h:\w\[\e[0m\] '
@@ -277,22 +290,30 @@ def ExportVars(ltp_vars, log):
 
 
 def ChangeLTP(log):
-	lg(log, "Fixing LTP Code to enable rcp01 and ftp01")
 	ltpbin = os.environ['ltp_bin']
-	command = "sed 's/rsh/ssh/g' %s/rcp01.sh > %s/rcp01.sh.new" % (ltpbin, ltpbin)
-	RunCommand(command, log, 1)
-	command = "mv -f %s/rcp01.sh.new %s/rcp01.sh" % (ltpbin, ltpbin)
-	RunCommand(command, log, 1)
-	command = "sed 's/rsh/ssh/g' %s/ftp01.sh > %s/ftp01.sh.new" % (ltpbin, ltpbin)
-	RunCommand(command, log, 1)
-	command = "mv -f %s/ftp01.sh.new %s/ftp01.sh" % (ltpbin, ltpbin)
-	RunCommand(command, log, 1)
+	command = "ls %s|grep -w rcp01.sh|grep -v grep|grep -v new|wc -l" % ltpbin
+	if int(RunCommand(command, log, 2, 0)) != 0:
+		lg(log, "Fixing LTP Code to enable rcp01")
+		command = "sed 's/rsh/ssh/g' %s/rcp01.sh > %s/rcp01.sh.new" % (ltpbin, ltpbin)
+		RunCommand(command, log, 1)
+		command = "mv -f %s/rcp01.sh.new %s/rcp01.sh" % (ltpbin, ltpbin)
+		RunCommand(command, log, 1)
 
-	lg(log, "Fixing LTP code to enable mcast4-queryfld related tests")
-	command = "sed 's/exists cut locale rsh/exists cut locale ssh/g' %s/check_envval > %s/check_envval.new" % (ltpbin, ltpbin)
-	RunCommand(command, log, 1)
-	command = "mv -f %s/check_envval.new %s/check_envval" % (ltpbin, ltpbin)
-	RunCommand(command, log, 1)
+	command = "ls %s|grep -w ftp01.sh|grep -v grep|grep -v new|wc -l" % ltpbin
+	if int(RunCommand(command, log, 2, 0)) != 0:
+		lg(log, "Fixing LTP Code to ftp01")
+		command = "sed 's/rsh/ssh/g' %s/ftp01.sh > %s/ftp01.sh.new" % (ltpbin, ltpbin)
+		RunCommand(command, log, 1)
+		command = "mv -f %s/ftp01.sh.new %s/ftp01.sh" % (ltpbin, ltpbin)
+		RunCommand(command, log, 1)
+
+	command = "ls %s|grep -w check_envval|grep -v grep|grep -v new|wc -l" % ltpbin
+	if int(RunCommand(command, log, 2, 0)) != 0:
+		lg(log, "Fixing LTP code to enable mcast4-queryfld related tests")
+		command = "sed 's/exists cut locale rsh/exists cut locale ssh/g' %s/check_envval > %s/check_envval.new" % (ltpbin, ltpbin)
+		RunCommand(command, log, 1)
+		command = "mv -f %s/check_envval.new %s/check_envval" % (ltpbin, ltpbin)
+		RunCommand(command, log, 1)
 
 	lg(log, "Change IO tests to use $TMPDIR")
 	command = "sed -i 's/\/test\//$TMPDIR\//g' /opt/ltp/runtest/lvm.part1"
