@@ -118,6 +118,6 @@ Original author, who developed the initial version of SLS under shell code
 
 Chethan Jain -chetjain@in.ibm.com 
 
-Additional owner, who rewritten the code in Python language
+Additional owner, who helped in rewriting the code in Python language
 
 Manjunath H.R -manjuhr1@in.ibm.com
