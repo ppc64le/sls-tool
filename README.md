@@ -112,12 +112,12 @@ In order to help SLS developers during code problems, please collect sls.tar and
 ```
 ./collect_logs.py
 ```
-Authors
+Authors & Maintainers
 -------------------------------------------------------------------------------
 Original author, who developed the initial version of SLS under shell code
 
 Chethan Jain -chetjain@in.ibm.com 
 
-Current owner, who rewritten the code in Python language
+Additional owner, who rewritten the code in Python language
 
 Manjunath H.R -manjuhr1@in.ibm.com
