@@ -343,7 +343,7 @@ if r:
 		GetFreeCPU(log, tlog)
 		GetFreeMem(log, tlog)
 		GetFsSpace(log, tlog)
-		if network_testing == 1 and CheckNw(log, ltp_vars) == 1:	
+		if network_testing == 1 and CheckNw(log, tlog, ltp_vars) == 1:	
 			lg(log, 'Network check failed, exiting...')
 			process.terminate()
 			exit(1)
@@ -552,7 +552,7 @@ while True:
 		GetFreeMem(log, tlog)
 		GetFsSpace(log, tlog)
 		if t or n or net_or_nfs == 1:
-			if CheckNw(log, ltp_vars) == 1:
+			if CheckNw(log, tlog, ltp_vars) == 1:
 				lg(log, 'Network check failed, exiting...')
 				break
 		time.sleep(2)
