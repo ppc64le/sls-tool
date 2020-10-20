@@ -1,0 +1,16 @@
+tag v1.0
+Tagger: Manjunatha Hr1 <manju@kte.isst.aus.stglabs.ibm.com>
+Date:   Tue Oct 20 12:00:42 2020 +0000
+
+SLS 1.0
+
+commit 91c515e00ccf06ee9f87b44863a4eca67d260bc1
+Merge: 5a29d46 913f960
+Author: chetjain <chethanjain@gmail.com>
+Date:   Thu Sep 3 14:39:29 2020 +0530
+
+    Merge pull request #26 from ppc64le/chetjain-patch-1
+    
+    Addressing https://github.com/ppc64le/sls-tool/issues/25
+    leapsec01 would change the date & time during execution and impacts sls progress. So blacklisting.
+
