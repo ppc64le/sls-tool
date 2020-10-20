@@ -195,6 +195,11 @@ RunCommand(command, tlog, 1, 1)
 RunCommand('ulimit -l unlimited', tlog, 0, 0)
 RunCommand('ulimit -n 99999', tlog, 0, 0)
 
+#Get SLS version
+sls_version = RunCommand("cat ./sls_version |grep '^tag'|awk '{print $2}'", tlog, 2, 0).strip()
+sls_version = "SLS VERSION: %s" % sls_version
+lg(log, sls_version)
+
 FOCUS_AREA=""
 if t:
 	FOCUS_AREA="%s %s" % (FOCUS_AREA, os.environ['NW1_LIST'])
