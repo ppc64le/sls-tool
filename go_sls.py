@@ -308,6 +308,7 @@ if r:
 			if len(l.split('=')) != 2:
 				line = "Wrong line number:%d  : %s" % (lnum,l)
 				lg(log, line, 0)
+				cleanup(log, tlog)
 				exit(1)
 			key = l.split('=')[0]
 			val = l.split('=')[1]
@@ -346,6 +347,7 @@ if r:
 		if network_testing == 1 and CheckNw(log, ltp_vars) == 1:	
 			lg(log, 'Network check failed, exiting...')
 			process.terminate()
+			cleanup(log, tlog)
 			exit(1)
 		time.sleep(2)
 	lg(log, "Completed all test scenario execution.", 0)
@@ -375,6 +377,7 @@ if r:
 	lg(log, line, 0)
 	lg(log, "Completed full suite, Thanks for using SLS Tool", 0)
 	process.terminate() 
+	cleanup(log, tlog)
 	exit(0)
 
 if 'TEST_HOURS' in ltp_vars:
@@ -602,4 +605,5 @@ line = "Updated STATUS to COMPLETE in REPORT.json"
 lg(log, line, 0)
 lg(log, "Completed full suite, Thanks for using SLS Tool", 0)
 os.killpg(0, signal.SIGINT)
+cleanup(log, tlog)
 process.terminate() 
