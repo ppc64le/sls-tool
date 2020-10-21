@@ -1077,3 +1077,41 @@ def GetSuiteIterations(tlog, test, ltp_vars):
 			iterations = GetRandom(127)
 	
 	return [suite, iterations]
+
+
+def cleanup(log, slog):
+	i = 0
+	while i < 2:
+		command = "ps -eaf|grep -e run_test -e runltp -e ltp-pan -e growfiles|grep -v grep |grep -v stop_sls|awk '{print $2}'|tr '\n' '^'"
+		pids = RunCommand(command, slog, 2, 0).split('^')
+		lg(log, "Trying to kill ltp tests...")
+		for p in pids:
+			if p == '':
+				continue
+			command = "kill -9 %s" % p
+			lg(slog, command,0)
+			RunCommand(command, slog, 2, 0)
+	
+		lg(log,'Let us wait 10 seconds and kill SLS processes if any...')
+		time.sleep(10)
+		i += 1
+
+	#Unmount IO filesystems if any
+	lg(log, 'Trying to umount sls related filesystems, if any...')
+	command = "mount |grep -e '/tmp/ltp-' -e '/tmp/ltp_'|awk '{print $3}'|tr '\n' '^'"
+	mntpoints = RunCommand(command, slog, 2, 0).strip().split('^')
+	mntpoints = [x for x in mntpoints if x]
+	for mp in mntpoints:
+		lg(slog, 'Unmounting : %s' % mp)
+		command = 'umount %s' % mp
+		lg(slog,command)
+		if int(RunCommand(command, slog, 0, 0)) != 0:
+			command = 'umount -f %s' % mp
+			lg(slog,command)
+			if int(RunCommand(command, slog, 0, 0)) != 0:
+				command = 'umount -l %s' % mp
+				lg(slog,command)
+				if int(RunCommand(command, slog, 0, 0)) != 0:
+					lg(slog,'Failed to umount : %s, please umount manually' % mp)
+	
+	
