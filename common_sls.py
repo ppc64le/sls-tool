@@ -43,11 +43,12 @@
 
 import os
 import re
-#import commands
 import subprocess
 import random
 import time
 import datetime
+import threading
+
 
 def GetVars(filename='sls_config'):
 	ltp_variables = {}
@@ -608,7 +609,27 @@ def MachineInfo(log, ltp_vars):
 				line = "%cmd is not found"
 
 
-def CheckNw(log, ltp_vars):
+def PingTest(command, tlog):
+	return int(RunCommand(command, tlog, 0, 1))
+
+
+class RunWithTimeout(object):
+	def __init__(self, function, args):
+		self.function = function
+		self.args = args
+		self.answer = None
+
+	def worker(self):
+		self.answer = self.function(*self.args)
+
+	def run(self, timeout):
+		thread = threading.Thread(target=self.worker)
+		thread.start()
+		thread.join(timeout)
+		return self.answer
+
+
+def CheckNw(log, tlog, ltp_vars):
 	ping_target = ''
 	if ('IPV4_RHOST' in os.environ) and os.environ['IPV4_RHOST'] != '':
 		ping_target = os.environ['IPV4_RHOST'].strip()
@@ -618,11 +639,18 @@ def CheckNw(log, ltp_vars):
 		lg(log, 'Plese define either HTTP_SERVER or RHOST in ./sls_config')
 		return 1
 
-	if RunCommand("ping -c 4 " + ping_target + '> /dev/null', None, 0, 0) != 0:
+	command = "ping -c 4 -W 30 " + ping_target
+	line = "Starting ping thread for Primary RHOST: %s" % command
+	lg(log, line, 0)
+	th = RunWithTimeout(PingTest, (command, tlog))
+	thread_return = th.run(60)
+	if thread_return is None or thread_return != 0:
 		time.sleep(20)
-		check_iter = 1
-		while check_iter <= 30:
-			if RunCommand("ping -c 4 " + ping_target + '> /dev/null', None, 0, 0) != 0:
+		check_iter = 0
+		while check_iter < 30:
+			th = RunWithTimeout(PingTest, (command, tlog))
+			thread_return = th.run(20)
+			if thread_return is None or thread_return != 0:
 				line = "[CheckNw] [info] ping to %s Failed, retry:%d" % (ping_target,check_iter)
 				lg(log, line, 0, 1)
 			else:
@@ -634,7 +662,8 @@ def CheckNw(log, ltp_vars):
 	else:
 		line = "[CheckNw] [info] ping to %s Pass" % (ping_target)
 		lg(log, line, 0, 1)
-	return 0
+	
+		return 0
 
 
 def GetFreeCPU(log, tlog):
