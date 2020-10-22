@@ -482,8 +482,9 @@ while True:
 				if suite_iter[1] > 10:
 					suite_iter[1] = 10
 			if re.search(suite_iter[0], os.environ['NFS_LIST'], re.M):
-                                if suite_iter[1] > 10:
-                                        suite_iter[1] = GetRandom(10, 1)		
+				if suite_iter[1] > 10:
+					suite_iter[1] = GetRandom(10)
+
 			
 			test_detail = "%s(%s|%d)" % (test, suite_iter[0], suite_iter[1])
 			tests_scenario.append(test_detail)
@@ -520,8 +521,8 @@ while True:
 				if suite_iter[1] > 10:
 					suite_iter[1] = 10
 			if re.search(suite_iter[0], os.environ['NFS_LIST'], re.M):
-                                if suite_iter[1] > 10:
-                                        suite_iter[1] = GetRandom(10, 1)
+				if suite_iter[1] > 10:
+					suite_iter[1] = GetRandom(10)
 
 			#Add test to test list
 			test_detail = "%s(%s|%d)" % (test, suite_iter[0], suite_iter[1])
