@@ -200,6 +200,12 @@ sls_version = RunCommand("cat ./sls_version |grep '^tag'|awk '{print $2}'", tlog
 sls_version = "SLS VERSION: %s" % sls_version
 lg(log, sls_version)
 
+#Drop Cache memory
+lg(log, "Executing sync command", 0)
+RunCommand('sync', tlog, 0, 0)
+lg(log, "Executing drop cache: echo 3 > /proc/sys/vm/drop_caches", 0)
+RunCommand('echo 3 > /proc/sys/vm/drop_caches', tlog, 0, 0)
+
 FOCUS_AREA=""
 if t:
 	FOCUS_AREA="%s %s" % (FOCUS_AREA, os.environ['NW1_LIST'])
