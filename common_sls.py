@@ -130,8 +130,14 @@ def GetVars(filename='sls_config'):
 		return None
 	return ltp_variables	
 
-def lg(logfile,data,tostdout=1, timestamp=0):
+def lg(logfile, data, tostdout=1, timestamp=0):
 	logdir = "/".join(logfile.split('/')[0:-1])
+	while logdir is None:
+		time.sleep(20)
+		logdir = "/".join(logfile.split('/')[0:-1])
+		if logdir is not None:
+			break
+		print("logdir is None, LOGS NFS issue")
 	if not os.path.exists(logdir):
 		print ("%s directory does not exist") % (logdir)
 		exit(1)
@@ -140,6 +146,7 @@ def lg(logfile,data,tostdout=1, timestamp=0):
 		data = '[' + d + '] ' + data
 	if tostdout == 1:
 		print(data)
+
 	f = open(logfile, "ab")
 	line = "%s\n" % data
 	f.write(line.encode('utf-8'))
