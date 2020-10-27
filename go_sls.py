@@ -56,6 +56,32 @@ def usage():
 	print("----------------------------------------------------------------\n")
 	exit(1)
 
+def signal_handler(signum, frame):
+    signal.signal(signum, signal.SIG_IGN)
+    ltp_vars = GetVars()
+    if not ltp_vars:
+        exit(1)
+    if 'SLS_DIR' not in ltp_vars:
+        ltp_vars['SLS_DIR'] = '/var/log/sls/'
+    elif ltp_vars['SLS_DIR'].strip() == '': 
+        ltp_vars['SLS_DIR'] = '/var/log/sls/'
+    sls_logdir = ltp_vars['SLS_DIR']
+    tlog = "%s/go_sls.log" % sls_logdir
+    log = os.environ['TC_OUTPUT'] + '/START.LTP_log'
+    MASTER_FILE = os.environ['TC_OUTPUT'] + '/REPORT.json'  
+    with open(MASTER_FILE, 'r') as g:
+        REPORT = json.load(g)
+    g.close()
+    REPORT['RESULTS']['STATUS'] = 'ABORTED: STOPPED_BY_OS'
+    with open(MASTER_FILE, 'w') as g:
+        json.dump(REPORT, g)
+    g.close()
+
+    line = "Updated STATUS to ABORTED: STOPPED_BY_OS in signal handler"
+    lg(log, line, 0)
+    os.killpg(0, signal.SIGINT)
+    cleanup(log,tlog)
+
 START_TIME = datetime.datetime.now()
 str_time = START_TIME.strftime('%Y%m%d%H%M%S')
 
@@ -205,6 +231,13 @@ lg(log, "Executing sync command", 0)
 RunCommand('sync', tlog, 0, 0)
 lg(log, "Executing drop cache: echo 3 > /proc/sys/vm/drop_caches", 0)
 RunCommand('echo 3 > /proc/sys/vm/drop_caches', tlog, 0, 0)
+
+#Register kill signal handler
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGHUP, signal_handler)
+signal.signal(signal.SIGQUIT, signal_handler)
+signal.signal(signal.SIGABRT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 FOCUS_AREA=""
 if t:
