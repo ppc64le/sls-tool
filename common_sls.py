@@ -33,9 +33,10 @@
 #          20. GetFsSpace : Check how much free space is available on boot disk
 #          21. SetMinFree : Sets min_free_kbytes and swappiness as per SLS requirement
 #          22. CreateFS : Creates Filesystem/LVM on IO disks
-#          23. OOMKill : Kills SLS related processes if free memory goes below 10% of total memory
-#          24. ParseScenFile : Parses scenario file if SLS is executed with -r option
-#          25. GetSuiteIterations : Finds to which suite a test belongs to and decides how many iterations a test should be executed
+#          23. CreatePMEMFS : Creates pmem namespaces and filesystem required for IO test
+#          24. OOMKill : Kills SLS related processes if free memory goes below 10% of total memory
+#          25. ParseScenFile : Parses scenario file if SLS is executed with -r option
+#          26. GetSuiteIterations : Finds to which suite a test belongs to and decides how many iterations a test should be executed
 #
 #  SETUP:   1. Install SLS : ./install_sls.py 
 #           2. Start SLS : ./start_sls.py <options>
@@ -43,12 +44,11 @@
 
 import os
 import re
+#import commands
 import subprocess
 import random
 import time
 import datetime
-import threading
-
 
 def GetVars(filename='sls_config'):
 	ltp_variables = {}
@@ -101,15 +101,30 @@ def GetVars(filename='sls_config'):
 		if 'MUST_TEST' not in ltp_variables:
 			ltp_variables['MUST_TEST'] = ''
 
-		CHECKLIST = ['MIN_TEST_PER_SCENARIO', 'MAX_TEST_PER_SCENARIO', 'TEST_HOURS']
+		CHECKLIST = ['MIN_TEST_PER_SCENARIO', 'MAX_TEST_PER_SCENARIO']
 		for CH in CHECKLIST:
 			try:
 				if int(ltp_variables[CH]) <= 0:
-					print('Error in sls_config: %s should be a number' % CH)
+					print('Error in sls_config: %s should be a positive number' % CH)
 					return None
 			except Exception as e:
-				print('Error in sls_config: %s should be a number' % CH)
+				print('Error in sls_config: %s should be a positive number' % CH)
 				return None
+
+		try:
+			CH = 'TEST_HOURS'
+			if int(ltp_variables[CH]) <= 0:
+				print('Error in sls_config: %s should be a positive number' % CH)
+				return None
+		except Exception as e:
+			try:
+				if float(ltp_variables[CH]) <= 0:
+					print('Error in sls_config: %s should be a positive number' % CH)
+					return None
+			except Exception as e:
+				print('Error in sls_config: %s should be a positive number' % CH)
+				return None
+
 		if int(ltp_variables['MIN_TEST_PER_SCENARIO']) > int(ltp_variables['MAX_TEST_PER_SCENARIO']):
 			print('Error in sls_config: MIN_TEST_PER_SCENARIO is greater than MAX_TEST_PER_SCENARIO')
 			return None
@@ -130,14 +145,8 @@ def GetVars(filename='sls_config'):
 		return None
 	return ltp_variables	
 
-def lg(logfile, data, tostdout=1, timestamp=0):
+def lg(logfile,data,tostdout=1, timestamp=0):
 	logdir = "/".join(logfile.split('/')[0:-1])
-	while logdir is None:
-		time.sleep(20)
-		logdir = "/".join(logfile.split('/')[0:-1])
-		if logdir is not None:
-			break
-		print("logdir is None, LOGS NFS issue")
 	if not os.path.exists(logdir):
 		print ("%s directory does not exist") % (logdir)
 		exit(1)
@@ -146,7 +155,6 @@ def lg(logfile, data, tostdout=1, timestamp=0):
 		data = '[' + d + '] ' + data
 	if tostdout == 1:
 		print(data)
-
 	f = open(logfile, "ab")
 	line = "%s\n" % data
 	f.write(line.encode('utf-8'))
@@ -270,19 +278,6 @@ def ExportVars(ltp_vars, log):
 	os.environ['LTP_TIMEOUT_MUL'] = '40'
 	os.environ['TST_DISABLE_APPARMOR'] = '1'
 	os.environ['LTP_RSH'] = 'ssh'
-
-	if 'EXPORT_VARIABLES' in ltp_vars and ltp_vars['EXPORT_VARIABLES'] != '':
-		exp_variables = ltp_vars['EXPORT_VARIABLES'].split(',')
-		exp_variables = [x for x in exp_variables if x]
-		for evar in exp_variables:
-			if len(evar.split(':')) != 2:
-				lg(log, 'Invalid entry : %s in EXPORT_VARIABLES' % evar)
-				exit(1)
-			else:
-				key = evar.split(':')[0].strip()
-				value = evar.split(':')[1].strip()
-				os.environ[key] = value
-				lg(log, 'Exported %s' % evar)
 		
 	os.environ['LTPROOT'] = '/opt/ltp'
 	#os.environ['PS1'] = '\[\e[31m\]\u@\h:\w\[\e[0m\] '
@@ -298,30 +293,23 @@ def ExportVars(ltp_vars, log):
 
 
 def ChangeLTP(log):
+	lg(log, "Fixing LTP Code to enable rcp01 and ftp01")
 	ltpbin = os.environ['ltp_bin']
-	command = "ls %s|grep -w rcp01.sh|grep -v grep|grep -v new|wc -l" % ltpbin
-	if int(RunCommand(command, log, 2, 0)) != 0:
-		lg(log, "Fixing LTP Code to enable rcp01")
-		command = "sed 's/rsh/ssh/g' %s/rcp01.sh > %s/rcp01.sh.new" % (ltpbin, ltpbin)
-		RunCommand(command, log, 1)
-		command = "mv -f %s/rcp01.sh.new %s/rcp01.sh" % (ltpbin, ltpbin)
-		RunCommand(command, log, 1)
+	command = "sed 's/rsh/ssh/g' %s/rcp01.sh > %s/rcp01.sh.new" % (ltpbin, ltpbin)
+	RunCommand(command, log, 1)
+	command = "mv -f %s/rcp01.sh.new %s/rcp01.sh" % (ltpbin, ltpbin)
+	RunCommand(command, log, 1)
+	
+	command = "sed 's/rsh/ssh/g' %s/ftp01.sh > %s/ftp01.sh.new" % (ltpbin, ltpbin)
+	RunCommand(command, log, 1)
+	command = "mv -f %s/ftp01.sh.new %s/ftp01.sh" % (ltpbin, ltpbin)
+	RunCommand(command, log, 1)
 
-	command = "ls %s|grep -w ftp01.sh|grep -v grep|grep -v new|wc -l" % ltpbin
-	if int(RunCommand(command, log, 2, 0)) != 0:
-		lg(log, "Fixing LTP Code to ftp01")
-		command = "sed 's/rsh/ssh/g' %s/ftp01.sh > %s/ftp01.sh.new" % (ltpbin, ltpbin)
-		RunCommand(command, log, 1)
-		command = "mv -f %s/ftp01.sh.new %s/ftp01.sh" % (ltpbin, ltpbin)
-		RunCommand(command, log, 1)
-
-	command = "ls %s|grep -w check_envval|grep -v grep|grep -v new|wc -l" % ltpbin
-	if int(RunCommand(command, log, 2, 0)) != 0:
-		lg(log, "Fixing LTP code to enable mcast4-queryfld related tests")
-		command = "sed 's/exists cut locale rsh/exists cut locale ssh/g' %s/check_envval > %s/check_envval.new" % (ltpbin, ltpbin)
-		RunCommand(command, log, 1)
-		command = "mv -f %s/check_envval.new %s/check_envval" % (ltpbin, ltpbin)
-		RunCommand(command, log, 1)
+	lg(log, "Fixing LTP code to enable mcast4-queryfld related tests")
+	command = "sed 's/exists cut locale rsh/exists cut locale ssh/g' %s/check_envval > %s/check_envval.new" % (ltpbin, ltpbin)
+	RunCommand(command, log, 1)
+	command = "mv -f %s/check_envval.new %s/check_envval" % (ltpbin, ltpbin)
+	RunCommand(command, log, 1)
 
 	lg(log, "Change IO tests to use $TMPDIR")
 	command = "sed -i 's/\/test\//$TMPDIR\//g' /opt/ltp/runtest/lvm.part1"
@@ -334,7 +322,8 @@ def ChangeLTP(log):
 	RunCommand(command, log, 0, 0)
 	
 	lg(log, "Dropping unsupported tests")
-	arch = RunCommand("uname -i",log,2,0).strip()
+	arch = RunCommand("uname -i",log,2,0)
+	arch = arch.strip()
 	if arch == 'ppc64' or arch == 'ppc64le':
 		command = "sed -i '/_16/d' /opt/ltp/runtest/syscalls"
 		RunCommand(command, log, 0, 0)
@@ -423,7 +412,7 @@ def StartService(log):
 		lg(log, 'Stoping xinetd service', 0)
 		RunCommand("systemctl stop xinetd", log, 1)
 		lg(log, 'Disable Firewall', 0)
-		RunCommand("service firewalld stop", log, 1)
+		RunCommand("systemctl stop firewalld.service", log, 1)
 		lg(log, 'Starting NFS Service', 0)
 		RunCommand("systemctl start nfs-server", log, 1)
 		RunCommand("systemctl enable nfs-server", log, 1)
@@ -482,6 +471,7 @@ def CheckNetwork(ltp_vars, log, slog):
 	InstallPackage('bind-utils', log)
 	LHOST = ltp_vars['LHOST']
 	RHOST = ltp_vars['RHOST']
+	RHOST2 = ltp_vars['RHOST2']
 	if ValidIP(LHOST):
 		LHOST_IP = LHOST.strip()
 	else:
@@ -499,11 +489,24 @@ def CheckNetwork(ltp_vars, log, slog):
 			lg(log, "RHOST entry in ./sls_config  : " + RHOST + ' Invalid')
 			return 1
 		RHOST_IP = RHOST_IP.split(' ')[-1].strip()
+
+	if RHOST2 != '':
+		if ValidIP(RHOST2):
+			RHOST2_IP = RHOST2.strip()
+		else:
+			RHOST2_IP = RunCommand("host " + RHOST2, log, 2)
+			if not ValidIP(RHOST2_IP.split(' ')[-1]):
+				lg(log, "RHOST2 entry in ./sls_config  : " + RHOST2 + ' Invalid')
+				return 1
+			RHOST2_IP = RHOST2_IP.split(' ')[-1].strip()
 	
 	lg(slog, "LHOST=" + LHOST)
 	lg(slog, "IPV4_LHOST=" + LHOST_IP)
 	lg(slog, "RHOST=" + RHOST)
 	lg(slog, "IPV4_RHOST=" + RHOST_IP)
+	if RHOST2 != '':
+		lg(slog, "RHOST2=" + RHOST2)
+		lg(slog, "IPV4_RHOST2=" + RHOST2_IP)
 
 	command = "ip -o addr | grep -w %s|awk '{print $2}'" % (LHOST_IP)
 	LHOST_INTERFACE = RunCommand(command, log, 2)
@@ -539,6 +542,26 @@ def CheckNetwork(ltp_vars, log, slog):
 	if not re.search(':',RHOST_MAC, re.M):
 		lg(log, 'Mac Address for for IP: '+ RHOST_IP + ' on RHOST: '+ RHOST + ' is not correct : ' + RHOST_MAC)
 		return 1	
+
+	if RHOST2 != '':
+		command = "ssh -o PasswordAuthentication=no -n -q %s 'ip a' > %s/rhost2_interfaces" % (RHOST2, logdir) 
+		RunCommand(command, log, 1)
+		command = "cat %s/rhost2_interfaces|grep -B2 -w %s|head -1|awk '{print $2}'|sed 's/://g'" % (logdir, RHOST2_IP)
+		RHOST2_INTERFACE = RunCommand(command, log, 2)
+		RHOST2_INTERFACE = RHOST2_INTERFACE.strip()
+		lg(slog, "RHOST2_IFACES=" + RHOST2_INTERFACE)
+
+		command = "cat %s/rhost2_interfaces|grep -B2 -w %s|grep ether|tail -1|awk '{print $2}'" % (logdir, RHOST2_IP)
+		RHOST2_MAC = RunCommand(command, log, 2)
+		RHOST2_MAC = RHOST2_MAC.strip()
+		if RHOST2_INTERFACE == '':
+			lg(log, 'Mac Address for for IP: '+ RHOST2_IP + ' on RHOST2: '+ RHOST2 + ' could not be found')
+			return 1
+		lg(slog, "RHOST2_HWADDRS=" + RHOST2_MAC)
+
+		if not re.search(':',RHOST2_MAC, re.M):
+			lg(log, 'Mac Address for for IP: '+ RHOST2_IP + ' on RHOST2: '+ RHOST2 + ' is not correct : ' + RHOST2_MAC)
+			return 1	
 	
 	os.environ['LHOST'] = LHOST
 	os.environ['IPV4_LHOST'] = LHOST_IP
@@ -551,7 +574,14 @@ def CheckNetwork(ltp_vars, log, slog):
 	os.environ['IPV6_RHOST'] = ''
 	os.environ['RHOST_IFACES'] = RHOST_INTERFACE
 	os.environ['RHOST_HWADDRS'] = RHOST_MAC
-	
+
+	if RHOST2 != '':	
+		os.environ['RHOST2'] = RHOST2
+		os.environ['IPV4_RHOST2'] = RHOST2_IP
+		os.environ['IPV6_RHOST2'] = ''
+		os.environ['RHOST2_IFACES'] = RHOST2_INTERFACE
+		os.environ['RHOST2_HWADDRS'] = RHOST2_MAC
+
 	return 0
 
 
@@ -616,48 +646,22 @@ def MachineInfo(log, ltp_vars):
 				line = "%cmd is not found"
 
 
-def PingTest(command, tlog):
-	return int(RunCommand(command, tlog, 0, 1))
-
-
-class RunWithTimeout(object):
-	def __init__(self, function, args):
-		self.function = function
-		self.args = args
-		self.answer = None
-
-	def worker(self):
-		self.answer = self.function(*self.args)
-
-	def run(self, timeout):
-		thread = threading.Thread(target=self.worker)
-		thread.start()
-		thread.join(timeout)
-		return self.answer
-
-
-def CheckNw(log, tlog, ltp_vars):
+def CheckNw(log, ltp_vars):
+	primary_fail = 0
 	ping_target = ''
-	if ('IPV4_RHOST' in os.environ) and os.environ['IPV4_RHOST'] != '':
-		ping_target = os.environ['IPV4_RHOST'].strip()
+	if ('IPV4_RHOST' in ltp_vars) and ltp_vars['IPV4_RHOST'] != '':
+		ping_target = ltp_vars['IPV4_RHOST'].strip()
 	elif ltp_vars['HTTP_SERVER']:
 		ping_target = ltp_vars['HTTP_SERVER'].strip()
 	else:
 		lg(log, 'Plese define either HTTP_SERVER or RHOST in ./sls_config')
-		return 1
+		primary_fail = 1
 
-	command = "ping -c 4 -W 30 " + ping_target
-	line = "Starting ping thread for Primary RHOST: %s" % command
-	lg(log, line, 0)
-	th = RunWithTimeout(PingTest, (command, tlog))
-	thread_return = th.run(60)
-	if thread_return is None or thread_return != 0:
+	if RunCommand("ping -c 4 " + ping_target + '> /dev/null', None, 0, 0) != 0:
 		time.sleep(20)
-		check_iter = 0
-		while check_iter < 30:
-			th = RunWithTimeout(PingTest, (command, tlog))
-			thread_return = th.run(20)
-			if thread_return is None or thread_return != 0:
+		check_iter = 1
+		while check_iter <= 30:
+			if RunCommand("ping -c 4 " + ping_target + '> /dev/null', None, 0, 0) != 0:
 				line = "[CheckNw] [info] ping to %s Failed, retry:%d" % (ping_target,check_iter)
 				lg(log, line, 0, 1)
 			else:
@@ -665,13 +669,23 @@ def CheckNw(log, tlog, ltp_vars):
 				lg(log, line, 0, 1)
 				return 0
 			check_iter +=1
-		return 1
+		primary_fail = 1
 	else:
 		line = "[CheckNw] [info] ping to %s Pass" % (ping_target)
 		lg(log, line, 0, 1)
-	
+
+	if primary_fail == 0:
 		return 0
 
+	if ('IPV4_RHOST2' in ltp_vars) and ltp_vars['IPV4_RHOST2'] != '':
+		ping_target = ltp_vars['IPV4_RHOST2'].strip()
+		if RunCommand("ping -c 4 " + ping_target + '> /dev/null', None, 0, 0) != 0:
+			return 1
+		else:
+			return 2
+	else:
+		return 1
+		
 
 def GetFreeCPU(log, tlog):
 	while True:
@@ -698,14 +712,12 @@ def GetFreeCPU(log, tlog):
 			lg(log, line, 0, 1)
 			break
 
-
 def GetFreeMem(log, tlog):
 	while True:
-		lg(tlog, "Flushing the system buffers (sync). Tests not progressing? sync might by hung", 0)
-		RunCommand("sync", tlog, 2, 0)
-		RunCommand("echo 3 > /proc/sys/vm/drop_caches", tlog, 2, 0)
-		free_mem = RunCommand("free -m | awk '{print $4}' | grep -v [a-z] | head -n 1", tlog, 2, 0)
-		line = "[GetFreeMem] [info] Available free memory %s MB" % (free_mem.strip())
+		total_mem = int(RunCommand("free -m | awk '{print $2}' | grep -v [a-z] | head -n 1", tlog, 2, 0))
+		free_mem = int(RunCommand("free -m | awk '{print $4}' | grep -v [a-z] | head -n 1", tlog, 2, 0))
+		free_mem_percent = (free_mem * 100) / total_mem
+		line = "[GetFreeMem] [info] Available free memory %s MB" % (free_mem)
 		lg(log, line, 0, 1)
 		free_swap = RunCommand("free -m | awk '{print $4}' | grep -v [a-z] | tail -n 1", tlog, 2, 0)
 		line = "[GetFreeMem] [info] Available swap space %s MB" % (free_swap.strip())
@@ -717,7 +729,7 @@ def GetFreeMem(log, tlog):
 			lg(log, line, 0, 1)
 			time.sleep(rnum)
 		else:
-			line = "[GetFreeMem] [info] Free Memory %s MB" % (free_mem.strip())
+			line = "[GetFreeMem] [info] Free Memory percent %s" % (free_mem_percent)
 			lg(log, line, 0, 1)
 			break
 
@@ -791,6 +803,7 @@ def CreateFS(DISKS, FSTYPES, log):
 	#decide on FS or LVM
 	FS_AVAILABLE = []
 	lvm = 0;
+        pmem = 0
 	if FSTYPES.strip() != '' and len(FSTYPES.split(',')) != 0:
 		FS_TYPES = FSTYPES.split(',')
 		for T in FS_TYPES:
@@ -885,8 +898,8 @@ def CreateFS(DISKS, FSTYPES, log):
 			command = 'mkfs.%s %s %s' % (FS, force_option, D)
 			lg(log,command)
 			if int(RunCommand(command, log, 0, 1)) != 0:
-				chkcommand = "blkid %s|grep -w 'TYPE='|wc -l" % D
-				if int(RunCommand(chkcommand, log, 2, 1)) == 0:
+				command1 = "blkid %s|grep -w 'TYPE='|wc -l" % D
+				if int(RunCommand(command1, log, 2, 1)) == 0:
 					lg(log, '%s : Failed' % command)
 					return 1	
 				else:
@@ -903,6 +916,79 @@ def CreateFS(DISKS, FSTYPES, log):
 			
 	return 0 
 
+def CreatePMEMFS(log):
+    command = 'which ndctl'
+    if int(RunCommand(command, log, 0, 0)) != 0:
+        lg(log,'Installing ndctl..')
+        InstallPackage('ndctl', log)
+
+    else:
+        command = 'ndctl list -R | grep region | awk -F \'"\' \'{print $4}\''
+        regions = RunCommand(command,log, 2, 0)
+        if int(RunCommand(command, log, 0, 0)) == 0:
+            NSRegion = regions.split('\n')
+            NSRegion = [x for x in NSRegion if x]
+            command = 'ndctl list --regions -u | grep -w "size" | awk -F " " \'{print $1}\' | awk -F ":\\"" \'{print $2}\' | awk -F "." \'{print $1}\''
+            region_size = RunCommand(command, log, 2, 0)
+            NSlist = region_size.split('\n')
+            NSlist = [x for x in NSlist if x]
+            NSlist = map(( lambda x: x+'G'), NSlist)
+            command = 'ndctl destroy-namespace all --force'
+            RunCommand(command,log, 2, 0)
+            time.sleep (5)
+            for (NR, NS) in zip(NSRegion, NSlist): 
+                command = 'ndctl create-namespace -r %s -s %s' % (NR,NS)
+                lg(log,'%s......%s' %(NR,NS))
+                RunCommand(command, log, 1, 1)
+                lg(log,command)
+                command = 'ndctl list -m fsdax | grep "blockdev" | awk -F \'"\' \'{print $4}\''
+                PMEM_DISKS = RunCommand(command, log, 2, 0)
+                PMEM_DISKS = PMEM_DISKS.split('\n')
+                PMEM_DISKS = [x for x in PMEM_DISKS if x]
+                if len(PMEM_DISKS) == 0:
+                    lg(log, 'No pmem disks mentioned in sls_config')
+                    return 1 
+                dnum = 10
+                P_DISKS = []
+                for D in PMEM_DISKS:
+                    command = "ls /dev/|grep -w %s" % D
+                    if int(RunCommand(command, log, 0, 0)) == 0:
+                        P_DISKS.append('/dev/%s' % D)
+            for M in P_DISKS:
+                dnum += 1
+                fs_type = int(random.uniform(0,2))
+                if (fs_type == 1):
+                   FS = 'xfs'
+                else:
+                   FS = 'ext4'
+                if FS == 'xfs':
+                   command = 'mkfs.%s -f %s -b size=65536 -s size=512' % (FS, M)
+                   RunCommand(command, log, 1, 1)
+                   lg(log,'Creating FS:%s on Disk:%s' % (FS,M))
+                   lg(log,command)
+                else:
+                   command = 'mkfs.%s -F %s -b 65536' % (FS, M)
+                   RunCommand(command, log, 1, 1)
+                   lg(log,'Creating FS:%s on Disk:%s' % (FS,M))
+                   lg(log,command)
+                if int(RunCommand(command, log, 0, 1)) != 0:
+                   command1 = "blkid %s|grep -w 'TYPE='|wc -l" % M 
+                   if int(RunCommand(command1, log, 2, 1)) == 0:
+                        lg(log, '%s : Failed' % command)
+                        return 1
+                   else:
+                      lg(log, 'FS exists on %s, so proceeding' % M)
+
+                command = 'mkdir -p /tmp/ltp_io_pmem%d' % dnum
+                RunCommand(command, log, 1, 1)
+                command = 'mount -o dax %s /tmp/ltp_io_pmem%d' % (M,dnum)
+                RunCommand(command, log, 1, 1)
+                lg(log, 'Mounting Disk:%s to /tmp/ltp_io_pmem%d' % (M,dnum))
+                lg(log,command)
+        else:
+            lg(log,'pmem devices not seen.. SLS will not run on pmem devices..')
+            return 1
+    return 0
 def OOMKill(log, slog):
 	while True:
 		#If free memory is low, kill processes
@@ -956,8 +1042,6 @@ def OOMKill(log, slog):
 					lg(slog, line, 0)
 					command = "pkill %s" % boat
 					RunCommand(command, log, 0)
-			
-
 
 		#To remove any local ltp interface getting created. This may impact lab network
 		command = "ip a | grep -i -e dummy -e ltp|wc -l"
@@ -977,6 +1061,11 @@ def OOMKill(log, slog):
 		command = 'ps -eaf|grep go_sls|grep -v grep|wc -l'
 		if int(RunCommand(command, log, 2, 0)) <= 1:
 			lg(slog, "Looks like go_sls is completed, OOMKiller is exiting")
+			time.sleep(10)
+			#Update STATUS
+			command = "./show_results.py"
+			RunCommand(command, log, 1, 0)
+			exit(0)
 
 
 def ParseScenFile(log, sfile):
@@ -1085,23 +1174,28 @@ def GetSuiteIterations(tlog, test, ltp_vars):
 	
 	return [suite, iterations]
 
-
 def cleanup(log, slog):
-	i = 0
-	while i < 2:
-		command = "ps -eaf|grep -e run_test -e runltp -e ltp-pan -e growfiles|grep -v grep |grep -v stop_sls|awk '{print $2}'|tr '\n' '^'"
-		pids = RunCommand(command, slog, 2, 0).split('^')
-		lg(log, "Trying to kill ltp tests...")
-		for p in pids:
-			if p == '':
-				continue
-			command = "kill -9 %s" % p
-			lg(slog, command,0)
-			RunCommand(command, slog, 2, 0)
-	
-		lg(log,'Let us wait 10 seconds and kill SLS processes if any...')
-		time.sleep(10)
-		i += 1
+	command = "ps -eaf|grep -e run_test -e runltp -e ltp-pan -e growfiles|grep -v grep |grep -v stop_sls|awk '{print $2}'|tr '\n' '^'"
+	pids = RunCommand(command, slog, 2, 0).split('^')
+	lg(log, "Trying to kill ltp tests...")
+	for p in pids:
+		if p == '':
+			continue
+		command = "kill -9 %s" % p
+		lg(slog, command,0)
+		RunCommand(command, slog, 2, 0)
+
+	lg(log,'Let us wait 10 seconds and kill SLS processes if any...')
+
+	command = "ps -eaf|grep -e run_test -e runltp -e ltp-pan -e growfiles|grep -v grep |grep -v stop_sls|awk '{print $2}'|tr '\n' '^'"
+	pids = RunCommand(command, slog, 2, 0).split('^')
+	lg(log, "Trying to kill ltp tests...")
+	for p in pids:
+		if p == '':
+			continue
+		command = "kill -9 %s" % p
+		lg(slog, command,0)
+		RunCommand(command, slog, 2, 0)
 
 	#Unmount IO filesystems if any
 	lg(log, 'Trying to umount sls related filesystems, if any...')
@@ -1120,5 +1214,3 @@ def cleanup(log, slog):
 				lg(slog,command)
 				if int(RunCommand(command, slog, 0, 0)) != 0:
 					lg(slog,'Failed to umount : %s, please umount manually' % mp)
-	
-	

@@ -1,21 +1,22 @@
 #[Test Parameters]
 TEST_HOURS=72
 WAIT_SCENARIO='NO'
-MIN_TEST_PER_SCENARIO=2
-MAX_TEST_PER_SCENARIO=5
+MIN_TEST_PER_SCENARIO=12
+MAX_TEST_PER_SCENARIO=25
 ITERATIONS=''
 MUST_TEST=''
-EXCLUDE_TEST='zram01.sh,zram02.sh,zram03'
-IO_DISKS=''
-IO_FS=''
+EXCLUDE_TEST='zram01.sh,zram02.sh,zram03,kill11'
+IO_DISKS='mpathb,mpathc,mpathd'
+PMEM=yes
+IO_FS='xfs,ext4,btrfs,ext3'
 MACHINE_INFO_COMMANDS='multipath -l, df -h, cat /proc/cmdline'
 
 
 #[Machine Parameters]
 TC_HTML_PATH='/LOGS/SLS/'
 SLS_DIR='/var/log/sls'
-LHOST=''
-RHOST=''
+LHOST='sumlp54'
+RHOST='rheltcpserver'
+RHOST2='tcp01'
 PACKAGE_LIST=''
 PATH='/opt/ltp:/opt/ltp/testcases/bin:/opt/ltp/testscripts'
-EXPORT_VARIABLES='TST_USE_SSH:ssh,LTP_TIMEOUT_MUL:40,TST_DISABLE_APPARMOR:1,LTP_RSH:ssh'

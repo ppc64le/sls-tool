@@ -38,6 +38,7 @@ def usage():
 	print(" -i --> Runs IO Tests")
 	print(" -n --> Runs NFS Tests")
 	print(" -t --> Runs Network Tests")
+	print(" -u --> Improves CPU, Memory & IO utilization")	
 	print(" -s --> Run with Test suites. ex:\"syscalls,commands,fs\"")
 	print(" -r --> Run with previous Scenario File")
 	print("----------------------------------------------------------------\n")
@@ -71,8 +72,9 @@ parser = argparse.ArgumentParser(description='Start SLS')
 
 parser.add_argument('-b', action="store_true", dest="b", help='BASE Tests')
 parser.add_argument('-i', action="store_true", dest="i", help='IO Tests')
-parser.add_argument('-t', action="store_true", dest="t", help='Network Tests')
 parser.add_argument('-n', action="store_true", dest="n", help='NFS Tests')
+parser.add_argument('-t', action="store_true", dest="t", help='Network Tests')
+parser.add_argument('-u', action="store_true", dest="u", help='Improves CPU, Memory & IO Utilization')
 parser.add_argument('-s', action="store", dest="s", nargs="+", help='Test Suites')
 parser.add_argument('-r', action="store", dest="r", nargs="+", help='Run with Sceanrio file')
 	
@@ -82,6 +84,7 @@ t = args.t
 i = args.i
 b = args.b
 n = args.n
+u = args.u
 r = args.r
 s = args.s
 
@@ -93,6 +96,11 @@ if not ( t or b or i or n or s or r):
 command = "ps -eaf|grep go_sls|grep -v grep |wc -l"
 if int(RunCommand(command,slog,2,0)) > 0:
 	print("SLS is already running, if you wish to stop SLS please use: ./stop_sls.py")
+	exit(1)
+
+#Check if hostname is proper
+if RunCommand("hostname -s", slog,2,0).strip() == 'localhost':
+	print('Please set hostname and try to start SLS')
 	exit(1)
 
 #Remove old log files in SLS_DIR
@@ -163,16 +171,27 @@ if i or s:
 			lg(slog, '\nPreparing Disks for IO tests:\n------------------------------')
 			FSTYPES = ''
 			if 'IO_FS' in ltp_vars and ltp_vars['IO_FS']:
-				FSTYPES = ltp_vars['IO_FS'].strip()
-			IODISKS = ltp_vars['IO_DISKS'].strip()
-			fs_ret = CreateFS(IODISKS, FSTYPES, slog)
-			if fs_ret == 1:
+        		    FSTYPES = ltp_vars['IO_FS'].strip()
+                            IODISKS = ltp_vars['IO_DISKS'].strip()
+			    fs_ret = CreateFS(IODISKS, FSTYPES, slog)
+			    if fs_ret == 1:
 				exit(1)
-			elif fs_ret == 2:
+			    elif fs_ret == 2:
 				lg(slog, '/tmp will be used by IO tests')
-			else:
+			    else:
 				lg(slog, 'IO disks will be used for IO tests')	
-			lg(slog, '------------------------------\n')
+			    lg(slog, '------------------------------\n')
+                            PMEMDISKS = ltp_vars['PMEM']
+                            if PMEMDISKS == 'Y' or PMEMDISKS == 'yes' or PMEMDISKS == 1:
+                                lg(slog, '\nPreparing pmem devices for IO tests:\n------------------------------')
+                                fs_ret = CreatePMEMFS(slog)
+                                if fs_ret == 1:
+                                    exit(1)
+                                elif fs_ret == 2:
+                                    lg(slog, '/tmp will be used by IO tests')
+                                else:
+                                    lg(slog, 'IO pmem disks will be used for IO tests')
+                                lg(slog, '------------------------------\n')
 
 #Check MUST TESTS and EXCLUDE TESTS
 for TST in ['MUST_TEST', 'EXCLUDE_TEST']:
@@ -191,7 +210,6 @@ for TST in ['MUST_TEST', 'EXCLUDE_TEST']:
 				exit(1)
 	if TST == 'EXCLUDE_TEST' and 'MUST_TEST' in ltp_vars and ltp_vars['MUST_TEST'] != '' and 'EXCLUDE_TEST' in ltp_vars:
 		mtests = ltp_vars['MUST_TEST'].split(',')
-		mtests = [x for x in mtests if x]
 		etests = ltp_vars['EXCLUDE_TEST'].split(',')
 		etests = [x for x in etests if x]
 		for et in etests:
@@ -204,7 +222,7 @@ lg(slog, 'Exporting LTP Variables')
 lg(slog, 'Creating Log directories')
 ltp_vars = ExportVars(ltp_vars, slog)
 
-#Check if Network variables are declared if network test has to be executed
+#Check if Network variables are declared if network/nfs tests has to be executed
 if t or n:
 	scen_file = os.environ['TC_OUTPUT'] + '/SCENARIO_LIST'
 	lg(slog, 'Checking LHOST and RHOST setting for Network Tests')
@@ -313,8 +331,18 @@ if os.environ['HOSTNAME'] == ltp_vars['HTTP_SERVER']:
 else:
 	lg(slog, reportstr + ltp_vars['HTTP_SERVER'] + '/' + ltp_vars['HTTP_SERVER'] + '/' + os.environ['TC_OUTPUT'])
 
+#Make note of latest log directory
 command = "echo %s > %s/latest_log" % (os.environ['TC_OUTPUT'], logdir)
 RunCommand(command, slog, 2, 0)
 
+#Call monitor script
+command = "./monitor_sls.py > %s/monitor_sls.log 2>&1 &" % logdir
+RunCommand(command, slog, 1, 0)
+
+#Call logstash script
+command = "./sls_logstash.py > /dev/null &"
+RunCommand(command, slog, 1, 0)
+
+#Invoke LTP tests via go_sls.py
 command = "./go_sls.py " +  " ".join(sys.argv[1:]) + " > %s/go_sls.err 2>&1 &" % logdir
 RunCommand(command, slog, 2, 0)
