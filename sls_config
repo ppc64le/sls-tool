@@ -8,6 +8,7 @@ MUST_TEST=''
 EXCLUDE_TEST='zram01.sh,zram02.sh,zram03'
 IO_DISKS=''
 IO_FS=''
+PMEM=''
 MACHINE_INFO_COMMANDS='multipath -l, df -h, cat /proc/cmdline'
 
 
