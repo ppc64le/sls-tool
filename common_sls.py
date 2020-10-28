@@ -701,11 +701,11 @@ def GetFreeCPU(log, tlog):
 
 def GetFreeMem(log, tlog):
 	while True:
-		        total_mem = int(RunCommand("free -m | awk '{print $2}' | grep -v [a-z] | head -n 1", tlog, 2, 0))
-        used_mem = int(RunCommand("free -m | awk '{print $3}' | grep -v [a-z] | head -n 1", tlog, 2, 0))
-        free_mem = total_mem - used_mem
-        free_mem_percent = (free_mem * 100) / total_mem
-        line = "[GetFreeMem] [info] Available free memory %s MB" % (free_mem)
+		total_mem = int(RunCommand("free -m | awk '{print $2}' | grep -v [a-z] | head -n 1", tlog, 2, 0))
+		used_mem = int(RunCommand("free -m | awk '{print $3}' | grep -v [a-z] | head -n 1", tlog, 2, 0))
+		free_mem = total_mem - used_mem
+		free_mem_percent = (free_mem * 100) / total_mem
+		line = "[GetFreeMem] [info] Available free memory %s MB" % (free_mem)
 		lg(log, line, 0, 1)
 		free_swap = RunCommand("free -m | awk '{print $4}' | grep -v [a-z] | tail -n 1", tlog, 2, 0)
 		line = "[GetFreeMem] [info] Available swap space %s MB" % (free_swap.strip())
