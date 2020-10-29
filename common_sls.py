@@ -33,11 +33,12 @@
 #          20. GetFsSpace : Check how much free space is available on boot disk
 #          21. SetMinFree : Sets min_free_kbytes and swappiness as per SLS requirement
 #          22. CreateFS : Creates Filesystem/LVM on IO disks
-#          23. CreatePMEMFS : Creates pmem namespaces and filesystem required for IO test
-#          24. OOMKill : Kills SLS related processes if free memory goes below 10% of total memory
-#          25. ParseScenFile : Parses scenario file if SLS is executed with -r option
-#          26. GetSuiteIterations : Finds to which suite a test belongs to and decides how many iterations a test should be executed
+#          23. OOMKill : Kills SLS related processes if free memory goes below 10% of total memory
+#          24. ParseScenFile : Parses scenario file if SLS is executed with -r option
+#          25. GetSuiteIterations : Finds to which suite a test belongs to and decides how many iterations a test should be executed
+#          26. CreatePMEMFS : Creates pmem namespaces and filesystem required for IO test
 #
+
 #  SETUP:   1. Install SLS : ./install_sls.py 
 #           2. Start SLS : ./start_sls.py <options>
 #           3. Functions in common_sls.py will get called internally from above two scripts.
