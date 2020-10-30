@@ -945,7 +945,7 @@ def CreatePMEMFS(log):
 		for D in PMEM_DISKS:
 			command = "ls /dev/|grep -w %s" % D
 			if int(RunCommand(command, log, 0, 0)) == 0:
-			P_DISKS.append('/dev/%s' % D)
+				P_DISKS.append('/dev/%s' % D)
 	for M in P_DISKS:
 		dnum += 1
 		fs_type = int(random.uniform(0,2))
