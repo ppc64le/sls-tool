@@ -719,7 +719,7 @@ def GetFreeMem(log, tlog):
 			lg(log, line, 0, 1)
 			time.sleep(rnum)
 		else:
-			line = "[GetFreeMem] [info] Free Memory %s MB" % (free_mem.strip())
+			line = "[GetFreeMem] [info] Free Memory %s MB" % (free_mem_percent)
 			lg(log, line, 0, 1)
 			break
 
