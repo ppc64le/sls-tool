@@ -174,6 +174,18 @@ if i or s:
 				lg(slog, 'IO disks will be used for IO tests')	
 			lg(slog, '------------------------------\n')
 
+
+		PMEMDISKS = ltp_vars['PMEM']
+		if PMEMDISKS == 'Y' or PMEMDISKS == 'yes' or PMEMDISKS == 1 or PMEMDISKS == 'y':
+			lg(slog, '\nPreparing pmem devices for IO tests:\n------------------------------')
+			fs_ret = CreatePMEMFS(slog)
+			if fs_ret == 1:
+				exit(1)
+			else:
+				lg(slog, 'IO pmem disks will be used for IO tests')
+			lg(slog, '------------------------------\n')
+
+
 #Check MUST TESTS and EXCLUDE TESTS
 for TST in ['MUST_TEST', 'EXCLUDE_TEST']:
 	if TST in ltp_vars and ltp_vars[TST] != '':
