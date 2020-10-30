@@ -175,7 +175,7 @@ if i or s:
 			lg(slog, '------------------------------\n')
 
 		PMEMDISKS = ltp_vars['PMEM']
-		if PMEMDISKS == 'Y' or PMEMDISKS == 'yes' or PMEMDISKS == 1:
+		if PMEMDISKS == 'Y' or PMEMDISKS == 'yes' or PMEMDISKS == 1 or PMEMDISKS == 'y':
 			lg(slog, '\nPreparing pmem devices for IO tests:\n------------------------------')
 			fs_ret = CreatePMEMFS(slog)
 			if fs_ret == 1:
