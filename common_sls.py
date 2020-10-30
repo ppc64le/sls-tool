@@ -37,6 +37,8 @@
 #          24. ParseScenFile : Parses scenario file if SLS is executed with -r option
 #          25. GetSuiteIterations : Finds to which suite a test belongs to and decides how many iterations a test should be executed
 #          26. CreatePMEMFS : Creates pmem namespaces and filesystem required for IO test
+#
+
 #  SETUP:   1. Install SLS : ./install_sls.py 
 #           2. Start SLS : ./start_sls.py <options>
 #           3. Functions in common_sls.py will get called internally from above two scripts.
@@ -701,11 +703,11 @@ def GetFreeCPU(log, tlog):
 
 def GetFreeMem(log, tlog):
 	while True:
-		lg(tlog, "Flushing the system buffers (sync). Tests not progressing? sync might by hung", 0)
-		RunCommand("sync", tlog, 2, 0)
-		RunCommand("echo 3 > /proc/sys/vm/drop_caches", tlog, 2, 0)
-		free_mem = RunCommand("free -m | awk '{print $4}' | grep -v [a-z] | head -n 1", tlog, 2, 0)
-		line = "[GetFreeMem] [info] Available free memory %s MB" % (free_mem.strip())
+		total_mem = int(RunCommand("free -m | awk '{print $2}' | grep -v [a-z] | head -n 1", tlog, 2, 0))
+		used_mem = int(RunCommand("free -m | awk '{print $3}' | grep -v [a-z] | head -n 1", tlog, 2, 0))
+		free_mem = total_mem - used_mem
+		free_mem_percent = (free_mem * 100) / total_mem
+		line = "[GetFreeMem] [info] Available free memory %s MB" % (free_mem)
 		lg(log, line, 0, 1)
 		free_swap = RunCommand("free -m | awk '{print $4}' | grep -v [a-z] | tail -n 1", tlog, 2, 0)
 		line = "[GetFreeMem] [info] Available swap space %s MB" % (free_swap.strip())
@@ -902,6 +904,79 @@ def CreateFS(DISKS, FSTYPES, log):
 			dnum += 1
 			
 	return 0 
+def CreatePMEMFS(log):
+    command = 'which ndctl'
+    if int(RunCommand(command, log, 0, 0)) != 0:
+        lg(log,'Installing ndctl..')
+        InstallPackage('ndctl', log)
+
+    else:
+        command = 'ndctl list -R | grep region | awk -F \'"\' \'{print $4}\''
+        regions = RunCommand(command,log, 2, 0)
+        if int(RunCommand(command, log, 0, 0)) == 0:
+            NSRegion = regions.split('\n')
+            NSRegion = [x for x in NSRegion if x]
+            command = 'ndctl list --regions -u | grep -w "size" | awk -F " " \'{print $1}\' | awk -F ":\\"" \'{print $2}\' | awk -F "." \'{print $1}\''
+            region_size = RunCommand(command, log, 2, 0)
+            NSlist = region_size.split('\n')
+            NSlist = [x for x in NSlist if x]
+            NSlist = map(( lambda x: x+'G'), NSlist)
+            command = 'ndctl destroy-namespace all --force'
+            RunCommand(command,log, 2, 0)
+            time.sleep (5)
+            for (NR, NS) in zip(NSRegion, NSlist):
+                command = 'ndctl create-namespace -r %s -s %s' % (NR,NS)
+                lg(log,'%s......%s' %(NR,NS))
+                RunCommand(command, log, 1, 1)
+                lg(log,command)
+                command = 'ndctl list -m fsdax | grep "blockdev" | awk -F \'"\' \'{print $4}\''
+                PMEM_DISKS = RunCommand(command, log, 2, 0)
+                PMEM_DISKS = PMEM_DISKS.split('\n')
+                PMEM_DISKS = [x for x in PMEM_DISKS if x]
+                if len(PMEM_DISKS) == 0:
+                    lg(log, 'No pmem disks mentioned in sls_config')
+                    return 1
+                dnum = 10
+                P_DISKS = []
+                for D in PMEM_DISKS:
+                    command = "ls /dev/|grep -w %s" % D
+                    if int(RunCommand(command, log, 0, 0)) == 0:
+                        P_DISKS.append('/dev/%s' % D)
+            for M in P_DISKS:
+                dnum += 1
+                fs_type = int(random.uniform(0,2))
+                if (fs_type == 1):
+                   FS = 'xfs'
+                else:
+                   FS = 'ext4'
+                if FS == 'xfs':
+                   command = 'mkfs.%s -f %s -b size=65536 -s size=512' % (FS, M)
+                   RunCommand(command, log, 1, 1)
+                   lg(log,'Creating FS:%s on Disk:%s' % (FS,M))
+                   lg(log,command)
+                else:
+                   command = 'mkfs.%s -F %s -b 65536' % (FS, M)
+                   RunCommand(command, log, 1, 1)
+                   lg(log,'Creating FS:%s on Disk:%s' % (FS,M))
+                   lg(log,command)
+                if int(RunCommand(command, log, 0, 1)) != 0:
+                   command1 = "blkid %s|grep -w 'TYPE='|wc -l" % M
+                   if int(RunCommand(command1, log, 2, 1)) == 0:
+                        lg(log, '%s : Failed' % command)
+                        return 1
+                   else:
+                      lg(log, 'FS exists on %s, so proceeding' % M)
+
+                command = 'mkdir -p /tmp/ltp_io_pmem%d' % dnum
+                RunCommand(command, log, 1, 1)
+                command = 'mount -o dax %s /tmp/ltp_io_pmem%d' % (M,dnum)
+                RunCommand(command, log, 1, 1)
+                lg(log, 'Mounting Disk:%s to /tmp/ltp_io_pmem%d' % (M,dnum))
+                lg(log,command)
+        else:
+            lg(log,'pmem devices not seen.. SLS will not run on pmem devices..')
+            return 1
+    return 0
 
 def CreatePMEMFS(log):
 	command = 'which ndctl'

@@ -56,6 +56,32 @@ def usage():
 	print("----------------------------------------------------------------\n")
 	exit(1)
 
+def signal_handler(signum, frame):
+    signal.signal(signum, signal.SIG_IGN)
+    ltp_vars = GetVars()
+    if not ltp_vars:
+        exit(1)
+    if 'SLS_DIR' not in ltp_vars:
+        ltp_vars['SLS_DIR'] = '/var/log/sls/'
+    elif ltp_vars['SLS_DIR'].strip() == '': 
+        ltp_vars['SLS_DIR'] = '/var/log/sls/'
+    sls_logdir = ltp_vars['SLS_DIR']
+    tlog = "%s/go_sls.log" % sls_logdir
+    log = os.environ['TC_OUTPUT'] + '/START.LTP_log'
+    MASTER_FILE = os.environ['TC_OUTPUT'] + '/REPORT.json'  
+    with open(MASTER_FILE, 'r') as g:
+        REPORT = json.load(g)
+    g.close()
+    REPORT['RESULTS']['STATUS'] = 'ABORTED: STOPPED_BY_OS'
+    with open(MASTER_FILE, 'w') as g:
+        json.dump(REPORT, g)
+    g.close()
+
+    line = "Updated STATUS to ABORTED: STOPPED_BY_OS in signal handler"
+    lg(log, line, 0)
+    os.killpg(0, signal.SIGINT)
+    cleanup(log,tlog)
+
 START_TIME = datetime.datetime.now()
 str_time = START_TIME.strftime('%Y%m%d%H%M%S')
 
@@ -206,6 +232,13 @@ RunCommand('sync', tlog, 0, 0)
 lg(log, "Executing drop cache: echo 3 > /proc/sys/vm/drop_caches", 0)
 RunCommand('echo 3 > /proc/sys/vm/drop_caches', tlog, 0, 0)
 
+#Register kill signal handler
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGHUP, signal_handler)
+signal.signal(signal.SIGQUIT, signal_handler)
+signal.signal(signal.SIGABRT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
 FOCUS_AREA=""
 if t:
 	FOCUS_AREA="%s %s" % (FOCUS_AREA, os.environ['NW1_LIST'])
@@ -297,6 +330,8 @@ if s:
 	if net_or_nfs == 1:
 		os.environ['WAIT_SCENARIO'] = 'YES'
 
+network_fail = 0
+
 scen = 0
 scenario_file = "%s/SCENARIO_LIST" % os.environ['TC_OUTPUT']
 #If Scaenario file given as input
@@ -314,6 +349,9 @@ if r:
 			if len(l.split('=')) != 2:
 				line = "Wrong line number:%d  : %s" % (lnum,l)
 				lg(log, line, 0)
+				network_fail = 1
+				process.terminate()
+				os.killpg(0, signal.SIGINT)
 				cleanup(log, tlog)
 				exit(1)
 			key = l.split('=')[0]
@@ -352,9 +390,11 @@ if r:
 		GetFsSpace(log, tlog)
 		if network_testing == 1 and CheckNw(log, tlog, ltp_vars) == 1:	
 			lg(log, 'Network check failed, exiting...')
+			network_fail = 1
 			process.terminate()
 			cleanup(log, tlog)
-			exit(1)
+			os.killpg(0, signal.SIGINT)
+			break
 		time.sleep(2)
 	lg(log, "Completed all test scenario execution.", 0)
 
@@ -372,7 +412,11 @@ if r:
 	with open(MASTER_FILE, 'r') as g:
 		REPORT = json.load(g)
 	g.close()
-	REPORT['RESULTS']['STATUS'] = 'Completed'
+	if network_fail == 0:
+		REPORT['RESULTS']['STATUS'] = 'Completed'
+	else:
+		REPORT['RESULTS']['STATUS'] = 'ABORTED: RHOST_DOWN'
+
 	CURRENT_TIME = datetime.datetime.now()
 	REPORT['RESULTS']['RUNTIME'] = str(CURRENT_TIME - START_TIME)
 	with open(MASTER_FILE, 'w') as g:
@@ -485,6 +529,23 @@ while True:
 				if suite_iter[1] > 10:
 					suite_iter[1] = GetRandom(10)
 
+			#If network_fail then pick skip NFS and Network tests
+			if network_fail == 1:
+				if re.search(suite_iter[0], os.environ['NW1_LIST'], re.M):
+					iline = 'Ignoring network test:%s, as RHOSTS ping failed' % test
+					lg(log, iline, 0)
+					continue
+
+				if re.search(suite_iter[0], os.environ['NW2_LIST'], re.M):
+					iline = 'Ignoring network test:%s, as RHOSTS ping failed' % test
+					lg(log, iline, 0)
+					continue
+
+				if re.search(suite_iter[0], os.environ['NFS_LIST'], re.M):
+					iline = 'Ignoring NFS test:%s, as RHOSTS ping failed' % test
+					lg(log, iline, 0)
+					continue
+
 			
 			test_detail = "%s(%s|%d)" % (test, suite_iter[0], suite_iter[1])
 			tests_scenario.append(test_detail)
@@ -569,8 +630,14 @@ while True:
 		GetFsSpace(log, tlog)
 		if t or n or net_or_nfs == 1:
 			if CheckNw(log, tlog, ltp_vars) == 1:
-				lg(log, 'Network check failed, exiting...')
-				break
+				network_fail = 1
+				if b or i or s:
+					lg(log, 'Network check failed, so will pick only BASE & IO tests...')
+				else:
+					lg(log, 'Network check failed, exiting...')
+					break
+			else:
+				network_fail = 0
 		time.sleep(2)
 
 	CURRENT_TIME = datetime.datetime.now()
@@ -606,7 +673,11 @@ while True:
 with open(MASTER_FILE, 'r') as g:
 	REPORT = json.load(g)
 g.close()
-REPORT['RESULTS']['STATUS'] = 'Completed'
+if network_fail == 0:
+	REPORT['RESULTS']['STATUS'] = 'Completed'
+	lg(log, "Completed full suite, Thanks for using SLS Tool", 0)
+else:
+	REPORT['RESULTS']['STATUS'] = 'ABORTED: RHOST_DOWN'
 REPORT['RESULTS']['RUNTIME'] = str(CURRENT_TIME - START_TIME)
 with open(MASTER_FILE, 'w') as g:
 	json.dump(REPORT, g)
@@ -616,7 +687,6 @@ fcntl.flock(lock_file, fcntl.LOCK_UN)
 
 line = "Updated STATUS to COMPLETE in REPORT.json"
 lg(log, line, 0)
-lg(log, "Completed full suite, Thanks for using SLS Tool", 0)
 os.killpg(0, signal.SIGINT)
 cleanup(log, tlog)
 process.terminate() 

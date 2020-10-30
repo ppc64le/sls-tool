@@ -91,7 +91,7 @@ while True:
 with open(MASTER_FILE, 'r') as g:
 	REPORT = json.load(g)
 
-REPORT['RESULTS']['STATUS'] = "ABORTED"
+REPORT['RESULTS']['STATUS'] = "STOPPED_BY_USER"
 with open(MASTER_FILE, "w") as g:
 	json.dump(REPORT, g)
 

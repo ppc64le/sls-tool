@@ -173,6 +173,18 @@ if i or s:
 			else:
 				lg(slog, 'IO disks will be used for IO tests')	
 			lg(slog, '------------------------------\n')
+                PMEMDISKS = ltp_vars['PMEM']
+                if PMEMDISKS == 'Y' or PMEMDISKS == 'yes' or PMEMDISKS == 1:
+                    lg(slog, '\nPreparing pmem devices for IO tests:\n------------------------------')
+                    fs_ret = CreatePMEMFS(slog)
+                    if fs_ret == 1:
+                        exit(1)
+                    elif fs_ret == 2:
+                        lg(slog, '/tmp will be used by IO tests')
+                    else:
+                        lg(slog, 'IO pmem disks will be used for IO tests')
+                        lg(slog, '------------------------------\n')
+                        
 
 		PMEMDISKS = ltp_vars['PMEM']
 		if PMEMDISKS == 'Y' or PMEMDISKS == 'yes' or PMEMDISKS == 1 or PMEMDISKS == 'y':
