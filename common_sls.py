@@ -978,6 +978,82 @@ def CreatePMEMFS(log):
             return 1
     return 0
 
+def CreatePMEMFS(log):
+	command = 'which ndctl'
+	if int(RunCommand(command, log, 0, 0)) != 0:
+		lg(log,'Installing ndctl..')
+		InstallPackage('ndctl', log)
+		time.sleep(10)
+	else:
+		command = 'ndctl list -R | grep region | awk -F \'"\' \'{print $4}\''
+		regions = RunCommand(command,log, 2, 0)
+		if int(RunCommand(command, log, 0, 0)) == 0:
+			NSRegion = regions.split('\n')
+			NSRegion = [x for x in NSRegion if x]
+			if len(NSRegion) == 0:
+				lg(log, 'No pmem devices seen.. Please check sls_config..')
+				return 1
+			command = 'ndctl list --regions -u | grep -w "size" | awk -F " " \'{print $1}\' | awk -F ":\\"" \'{print $2}\' | awk -F "." \'{print $1}\''
+			region_size = RunCommand(command, log, 2, 0)
+			NSlist = region_size.split('\n')
+			NSlist = [x for x in NSlist if x]
+			NSlist = map(( lambda x: x+'G'), NSlist)
+			command = 'ndctl destroy-namespace all --force'
+			RunCommand(command,log, 2, 0)
+			time.sleep (5)
+			for (NR, NS) in zip(NSRegion, NSlist):
+				command = 'ndctl create-namespace -r %s -s %s' % (NR,NS)
+				lg(log,'%s......%s' %(NR,NS))
+				RunCommand(command, log, 1, 1)
+				lg(log,command)
+				command = 'ndctl list -m fsdax | grep "blockdev" | awk -F \'"\' \'{print $4}\''
+				PMEM_DISKS = RunCommand(command, log, 2, 0)
+				PMEM_DISKS = PMEM_DISKS.split('\n')
+				PMEM_DISKS = [x for x in PMEM_DISKS if x]
+				PMEM_DISKS = [x for x in PMEM_DISKS if x]
+
+			dnum = 10
+			P_DISKS = []
+			for D in PMEM_DISKS:
+				command = "ls /dev/|grep -w %s" % D
+				if int(RunCommand(command, log, 0, 0)) == 0:
+				P_DISKS.append('/dev/%s' % D)
+		for M in P_DISKS:
+			dnum += 1
+			fs_type = int(random.uniform(0,2))
+			if (fs_type == 1):
+				FS = 'xfs'
+			else:
+				FS = 'ext4'
+			if FS == 'xfs':
+				command = 'mkfs.%s -f %s -b size=65536 -s size=512' % (FS, M)
+				RunCommand(command, log, 1, 1)
+				lg(log,'Creating FS:%s on Disk:%s' % (FS,M))
+				lg(log,command)
+			else:
+				command = 'mkfs.%s -F %s -b 65536' % (FS, M)
+				RunCommand(command, log, 1, 1)
+				lg(log,'Creating FS:%s on Disk:%s' % (FS,M))
+				lg(log,command)
+
+			if int(RunCommand(command, log, 0, 1)) != 0:
+				command1 = "blkid %s|grep -w 'TYPE='|wc -l" % M
+				if int(RunCommand(command1, log, 2, 1)) == 0:
+					lg(log, '%s : Failed' % command)
+					return 1
+			else:
+				lg(log, 'FS exists on %s, so proceeding' % M)
+
+			command = 'mkdir -p /tmp/ltp_io_pmem%d' % dnum
+			RunCommand(command, log, 1, 1)
+			command = 'mount -o dax %s /tmp/ltp_io_pmem%d' % (M,dnum)
+			RunCommand(command, log, 2, 0)
+			lg(log, 'Mounting Disk:%s to /tmp/ltp_io_pmem%d' % (M,dnum))
+			lg(log,command)
+	return 0
+
+
+
 def OOMKill(log, slog):
 	while True:
 		#If free memory is low, kill processes
