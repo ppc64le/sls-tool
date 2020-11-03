@@ -603,7 +603,7 @@ while True:
 		#Check free memory and launch only 1 test if less tahn 10% memory is available
 		command = "free -m | awk '{print $2}' | grep -v [a-z] | head -n 1"
 		total_mem = int(RunCommand(command, tlog, 2, 0))
-		command = "free -m | awk '{print $4}' | grep -v [a-z] | head -n 1"
+		command = "free -m | awk '{print $3}' | grep -v [a-z] | head -n 1"
 		free_mem = int(RunCommand(command, tlog, 2, 0))
 		free_mem_percent = (free_mem * 100) / total_mem
 		if free_mem_percent <= 10:
