@@ -601,10 +601,9 @@ while True:
 		f.close()
 
 		#Check free memory and launch only 1 test if less tahn 10% memory is available
-		command = "free -m | awk '{print $2}' | grep -v [a-z] | head -n 1"
-		total_mem = int(RunCommand(command, tlog, 2, 0))
-		command = "free -m | awk '{print $3}' | grep -v [a-z] | head -n 1"
-		free_mem = int(RunCommand(command, tlog, 2, 0))
+		total_mem = int(RunCommand("free -m | awk '{print $2}' | grep -v [a-z] | head -n 1", tlog, 2, 0))
+		used_mem = int(RunCommand("free -m | awk '{print $3}' | grep -v [a-z] | head -n 1", tlog, 2, 0))
+		free_mem = total_mem - used_mem
 		free_mem_percent = (free_mem * 100) / total_mem
 		if free_mem_percent <= 10:
 			line = "Alert !! Less than 10%% memory is available, so launching only 1 test for this scenario"
