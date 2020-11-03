@@ -984,8 +984,9 @@ def OOMKill(log, slog):
 		#If free memory is low, kill processes
 		command = "free -m | awk '{print $2}' | grep -v [a-z] | head -n 1"
 		total_mem = int(RunCommand(command, log, 2, 0))
-		command = "free -m | awk '{print $4}' | grep -v [a-z] | head -n 1"
-		free_mem = int(RunCommand(command, log, 2, 0))
+		command = "free -m | awk '{print $3}' | grep -v [a-z] | head -n 1"
+		used_mem = int(RunCommand(command, log, 2, 0))
+		free_mem = total_mem - used_mem
 		free_mem_percent = (free_mem*100)/total_mem
 		if free_mem_percent <= 10:
 			line = "Free Memory is %d%%" % free_mem_percent
