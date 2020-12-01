@@ -830,7 +830,7 @@ def CreateFS(DISKS, FSTYPES, log):
 			return 1
 	#Create LVM if required
 	if lvm == 1:
-		command = 'vgs|grep -w ltp_io'
+		command = 'vgs 2>/dev/null|grep -w ltp_io'
 		if int(RunCommand(command, log, 0, 0)) == 0:
 			lg(log,'VG: ltp_io is already present, please remove it using: vgremove and lvremove and retry')
 			return 1
