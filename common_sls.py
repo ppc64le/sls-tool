@@ -446,8 +446,8 @@ def StartService(log):
 		RunCommand("systemctl start xinetd", log, 1)
 	elif os == 'sles':
 		lg(log, 'Enabling Telnet Service', 0)
-		RunCommand("systemctl start telnet.socket", log, 1)
-		RunCommand("systemctl enable telnet.socket", log, 1)
+		RunCommand("systemctl start telnet.socket", log, 0)
+		RunCommand("systemctl enable telnet.socket", log, 0)
 		lg(log, 'Starting FTP service', 0)
 		RunCommand("[[ -f /etc/vsftpd.conf ]] && sed -i 's/listen=NO/listen=YES/' /etc/vsftpd.conf", log, 1)
 		RunCommand("[[ -f /etc/vsftpd.conf ]] && sed -i 's/listen_ipv6=YES/listen_ipv6=NO/' /etc/vsftpd.conf", log, 1)

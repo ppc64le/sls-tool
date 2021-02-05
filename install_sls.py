@@ -128,7 +128,7 @@ if os.environ['os_version'] == 'rhel' or os.environ['os_version'] == 'fedora':
 	mods = "xfrm dccp tunnel sctp"
 elif os.environ['os_version'] == 'sles':
 	if re.search('15', os.environ['VERSION'], re.M):
-		pack = "lftp telnet telnet-server systemd openssh httpd iftop vsftpd syslog nfs-kernel-server nfs-client iputils libtirpc-devel psmisc numactl* libaio* bzip2"
+		pack = "lftp telnet systemd openssh httpd iftop vsftpd syslog nfs-kernel-server nfs-client iputils libtirpc-devel psmisc numactl* libaio* bzip2"
 	else:
 		pack = "lftp telnet rlogin rcp httpd iftop vsftpd syslog psmisc numactl* libaio* bzip2"
 	
