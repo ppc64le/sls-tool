@@ -120,13 +120,16 @@ if args.m:
 	if os.path.exists(START_FILE):
 		command = "free -m | awk '{print $2}' | grep -v [a-z] | head -n 1"
 		totalmem = int(RunCommand(command, tlog, 2, 0))
-		command = "cat %s|grep 'Available free memory '|awk '{print $7}'|tr '\n' '^'" % START_FILE
+		command = "cat %s|grep 'Free Memory percent'|awk '{print $7}'|tr '\n' '^'" % START_FILE
 		freemem = RunCommand(command, tlog, 2, 0)
 		if freemem != "":
 			mem = freemem.split('^')
 			mem = [x for x in mem if x.strip()]
-			memused = 100 - ((eval("+".join(mem))/len(mem)) * 100)/totalmem
-			mem_usage = "Avg Memory Usage : %d%%" % memused
+			total_mem_percent = 0
+			for x in mem:
+				total_mem_percent += float(x)
+			total_mem_percent = 100 - (total_mem_percent / len(mem))
+			mem_usage = "Avg Memory Usage : %.2f%%" % total_mem_percent
 			print(mem_usage)
 	else:
 		print("%s file is not present" % START_FILE)
