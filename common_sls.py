@@ -1003,7 +1003,7 @@ def OOMKill(log, slog):
 				command = "kill -9 %s" % (pid)
 				RunCommand(command, log, 0)	
 
-			command = "ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head|awk -F' ' '{print $1\":\"$2\" \"$3}'|tr '/' ' '|awk -F' ' '{print $1\" \"$NF}'|tr ':' ' ' | awk '{ print $3}' |grep -v CMD|tr '\n' '^'"
+			command = "ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head|awk -F' ' '{print $1\":\"$2\" \"$3}'|tr '/' ' '|awk -F' ' '{print $1\" \"$NF}'|tr ':' ' ' | awk '{ print $3}' |grep -vE \"CMD|sshd|ssh\"|tr '\n' '^'"
 			output = RunCommand(command, log, 2, 0)
 			ship = output.split('^')	
 			ship = [i for i in ship if i]
@@ -1011,7 +1011,7 @@ def OOMKill(log, slog):
 				boat = boat.replace('[','').replace(']','')
 				if boat == 'sh':
 					continue
-				command = "grep -w %s /opt/ltp/runtest/*|grep -v 'grep'|wc -l" % boat
+				command = "grep -w %s /opt/ltp/runtest/*|grep -vE \"grep|ssh|sshd\"|wc -l" % boat
 				if int(RunCommand(command, log, 2, 0)) != 0:
 					line = "Calling killall -I %s" % boat
 					lg(slog, line, 0)
